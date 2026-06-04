@@ -1,0 +1,21 @@
+{
+  "api": {
+    "url": "http://internal-model-gateway.local/v1/chat/completions",
+    "key": "",
+    "model": "internal-chat-model"
+  },
+  "agent": {
+    "max_turns": 100,
+    "max_context_chars": 64000,
+    "recent_chats_to_inject": 5
+  },
+  "memory": {
+    "db_dir": ".myagent"
+  },
+  "stock_research": {
+    "dir": "",
+    "python": "",
+    "cron": "30 15 * * 1-5",
+    "job_name": "A股投研日报"
+  }
+}

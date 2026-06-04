@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Runtime config and secrets
+myagent_config.json
+myagent_config*.json
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+
+# JL-Agent runtime data
+.myagent/
+tool_audit.jsonl
+memory.db
+users.json
+online.json
+scheduled.json
+cron_jobs.json
+cron_runs.jsonl
+knowledge/
+sessions/
+skills/
+
+# Build output and local wheels
+build/
+dist/
+wheels/
+*.whl
+*.tar.gz
+
+# Local documents/data
+*.xlsx
+*.xls
+*.xlsm
+*.docx
+*.doc
+*.pptx
+*.ppt
+*.pdf
+*.wps
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.jsonl
+
+# Backups and OS files
+*.bak
+*.bak.*
+*.tmp
+*.temp
+.DS_Store
+.idea/
+.vscode/
+~$*

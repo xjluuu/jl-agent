@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JL-Agent - Local Enterprise AI Agent</title>
+  <style>
+    :root {
+      --bg: #080b0f;
+      --panel: #10151c;
+      --panel-2: #151b23;
+      --text: #f4f7fb;
+      --muted: #9aa8b6;
+      --line: rgba(255,255,255,.12);
+      --blue: #59a6ff;
+      --green: #40c463;
+      --gold: #f0b94d;
+      --red: #ff6f61;
+      --shadow: 0 24px 80px rgba(0,0,0,.45);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      letter-spacing: 0;
+    }
+    a { color: inherit; text-decoration: none; }
+    .nav {
+      position: fixed;
+      z-index: 20;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(22px, 5vw, 72px);
+      background: rgba(8, 11, 15, .72);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(18px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 760;
+      font-size: 18px;
+    }
+    .mark {
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: linear-gradient(145deg, #1b2430, #0c1118);
+      display: grid;
+      place-items: center;
+      color: var(--green);
+      font-weight: 800;
+      border-radius: 7px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      color: #06110a;
+      background: var(--green);
+      padding: 10px 14px;
+      border-radius: 7px;
+      font-weight: 700;
+    }
+    .hero {
+      min-height: 86vh;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      padding: 112px clamp(22px, 5vw, 72px) 64px;
+      border-bottom: 1px solid var(--line);
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(90deg, rgba(8,11,15,.96) 0%, rgba(8,11,15,.82) 42%, rgba(8,11,15,.42) 78%, rgba(8,11,15,.84) 100%),
+        linear-gradient(0deg, rgba(8,11,15,.9) 0%, rgba(8,11,15,.15) 48%, rgba(8,11,15,.9) 100%),
+        url("assets/github-preview.png");
+      background-size: cover;
+      background-position: center right;
+      transform: scale(1.02);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.6), transparent 72%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      width: min(820px, 100%);
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 740;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 0 6px rgba(64,196,99,.12);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(56px, 8vw, 116px);
+      line-height: .88;
+      letter-spacing: 0;
+    }
+    .lead {
+      margin: 30px 0 0;
+      color: #c7d1dc;
+      font-size: clamp(18px, 2.2vw, 24px);
+      line-height: 1.45;
+      max-width: 760px;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 34px;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight: 720;
+      backdrop-filter: blur(10px);
+    }
+    .button.primary {
+      background: var(--text);
+      color: #070a0e;
+      border-color: var(--text);
+    }
+    .signals {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 38px;
+      color: #d9e2ec;
+      font-size: 13px;
+    }
+    .signal {
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(10,14,20,.68);
+      padding: 9px 11px;
+      border-radius: 7px;
+    }
+    .section {
+      padding: 78px clamp(22px, 5vw, 72px);
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+    .section h2 {
+      margin: 0;
+      font-size: clamp(34px, 4vw, 56px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+    .section-copy {
+      color: var(--muted);
+      max-width: 500px;
+      line-height: 1.55;
+      margin: 0;
+    }
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+    .tile {
+      min-height: 190px;
+      background: linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.028));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .tile.large { grid-column: span 6; min-height: 300px; }
+    .tile.medium { grid-column: span 4; }
+    .tile h3 {
+      margin: 0 0 12px;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+    .tile p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .terminal {
+      margin-top: 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: #05080c;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .terminal-top {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 12px;
+      background: #0f141b;
+      border-bottom: 1px solid rgba(255,255,255,.09);
+    }
+    .lamp { width: 9px; height: 9px; border-radius: 50%; background: #ff5f57; }
+    .lamp:nth-child(2) { background: #ffbd2e; }
+    .lamp:nth-child(3) { background: #28c840; }
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow: auto;
+      color: #d8e6f3;
+      font-size: 14px;
+      line-height: 1.55;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      white-space: pre-wrap;
+    }
+    .ok { color: var(--green); }
+    .warn { color: var(--gold); }
+    .blue { color: var(--blue); }
+    .permissions {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .perm {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid rgba(255,255,255,.09);
+      color: var(--muted);
+    }
+    .perm b { color: var(--text); }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 26px;
+    }
+    .step {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 138px;
+    }
+    .step-number {
+      color: var(--green);
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .step h3 {
+      margin: 0 0 9px;
+      font-size: 17px;
+    }
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+    .compare {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    .compare th, .compare td {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    .compare th {
+      background: var(--panel-2);
+      font-size: 14px;
+    }
+    .compare td {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .compare td b { color: var(--text); }
+    .cta {
+      padding: 82px clamp(22px, 5vw, 72px);
+      background: #f4f7fb;
+      color: #0b1117;
+    }
+    .cta h2 {
+      margin: 0;
+      font-size: clamp(40px, 5vw, 72px);
+      line-height: .96;
+      letter-spacing: 0;
+      max-width: 850px;
+    }
+    .cta p {
+      max-width: 680px;
+      color: #536170;
+      line-height: 1.6;
+      font-size: 18px;
+    }
+    .cta .button {
+      background: #0b1117;
+      color: white;
+      border-color: #0b1117;
+      backdrop-filter: none;
+    }
+    footer {
+      padding: 26px clamp(22px, 5vw, 72px);
+      color: var(--muted);
+      border-top: 1px solid rgba(0,0,0,.08);
+      background: #f4f7fb;
+      font-size: 14px;
+    }
+    @media (max-width: 920px) {
+      .nav-links a:not(.nav-cta) { display: none; }
+      .hero { min-height: 82vh; }
+      .section-head { display: block; }
+      .section-copy { margin-top: 14px; }
+      .tile.large, .tile.medium { grid-column: span 12; }
+      .flow { grid-template-columns: 1fr; }
+      .compare { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="#" class="brand"><span class="mark">JL</span><span>JL-Agent</span></a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#deploy">Deploy</a>
+      <a href="#stock">Stock Research</a>
+      <a href="#permissions">Permissions</a>
+      <a class="nav-cta" href="#download">Download</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow"><span class="dot"></span> Local-first AI agent for restricted company environments</div>
+      <h1>JL-Agent</h1>
+      <p class="lead">一个能在内网、共享盘、Windows EXE 和本地 Python 环境中落地的企业级 AI Agent。它不是聊天壳，而是带权限、审计、知识库、工程工具和 A 股投研日报桥接的本地工作台。</p>
+      <div class="hero-actions">
+        <a class="button primary" href="#download">Download ZIP</a>
+        <a class="button" href="#features">View capabilities</a>
+        <a class="button" href="#stock">See /stock workflow</a>
+      </div>
+      <div class="signals">
+        <span class="signal">Single Python file</span>
+        <span class="signal">Windows EXE ready</span>
+        <span class="signal">Internal model gateway</span>
+        <span class="signal">Role-based tools</span>
+        <span class="signal">A-share daily report bridge</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="features" class="section">
+      <div class="section-head">
+        <h2>Built for the company PC you actually have.</h2>
+        <p class="section-copy">No Docker assumption. No public plugin marketplace dependency. No requirement that every coworker has Python. JL-Agent keeps runtime config, storage, permission boundaries and release checks explicit.</p>
+      </div>
+      <div class="bento">
+        <article class="tile large">
+          <h3>One file, serious workflow</h3>
+          <p>Run as Python during development, package as EXE for users without Python, and keep API/model/storage settings outside the executable.</p>
+          <div class="terminal">
+            <div class="terminal-top"><span class="lamp"></span><span class="lamp"></span><span class="lamp"></span></div>
+            <pre><span class="blue">$</span> python xjlagent.py --self-check
+<span class="ok">[OK]</span> config, storage, permissions, dependencies
+<span class="blue">$</span> python xjlagent.py --dashboard
+Dashboard: http://127.0.0.1:18888</pre>
+          </div>
+        </article>
+        <article class="tile large">
+          <h3>Agent controls, not just chat</h3>
+          <p>Project scan, verification suggestions, audit logs, local knowledge ingestion, parallel research, Risk Agent veto and scheduled tasks live behind role-based permissions.</p>
+          <div class="permissions">
+            <div class="perm"><b>Admin</b><span>Run commands, install cron, scan projects, manage users.</span></div>
+            <div class="perm"><b>Maintainer</b><span>Add approved knowledge and reusable workflows.</span></div>
+            <div class="perm"><b>Viewer</b><span>Use safe chat, documents, research and /stock report reading.</span></div>
+          </div>
+        </article>
+        <article class="tile medium">
+          <h3>Internal gateway ready</h3>
+          <p>API URL, key and model name can be changed in JSON config or environment variables without rebuilding.</p>
+        </article>
+        <article class="tile medium">
+          <h3>Audit and guardrails</h3>
+          <p>Tool calls are logged, secrets are redacted, file writes show diffs, and destructive shell commands are blocked by default.</p>
+        </article>
+        <article class="tile medium">
+          <h3>Configurable storage</h3>
+          <p>Use local user storage, a shared drive, or any organization-specific path. No fixed K/D drive assumption.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="stock" class="section">
+      <div class="section-head">
+        <h2>A 股投研日报桥接</h2>
+        <p class="section-copy">保留你现有的 stock_research 多 Agent 脚本，JL-Agent 负责把它变成用户可见、权限可控、可恢复定时任务的能力。</p>
+      </div>
+      <div class="bento">
+        <article class="tile large">
+          <h3>Daily report command</h3>
+          <p>普通用户只读报告；管理员才能手动运行或安装工作日 cron。</p>
+          <div class="terminal">
+            <div class="terminal-top"><span class="lamp"></span><span class="lamp"></span><span class="lamp"></span></div>
+            <pre><span class="blue">/stock</span>
+A股投研日报
+完成时间: 2026-06-03 15:30:05
+风险等级: 中
+操作许可: ALLOW
+仓位上限: 10%
+
+<span class="blue">/stock run</span>      <span class="warn">admin only</span>
+<span class="blue">/stock install</span>  <span class="warn">admin only</span></pre>
+          </div>
+        </article>
+        <article class="tile large">
+          <h3>Risk Agent first</h3>
+          <p>日报把风控闸门放在第一部分，能展示 ALLOW/DENY、仓位上限、硬规则和软规则。研究工作可以继续用 risk_veto_research 做一票否决。</p>
+          <div class="terminal">
+            <div class="terminal-top"><span class="lamp"></span><span class="lamp"></span><span class="lamp"></span></div>
+            <pre>第一部分：风控闸门
+风险等级: 中
+操作许可: ALLOW
+硬规则: 连板 / 跌停 / 炸板 / 全面偏空
+软规则: 炸板率高 -25%</pre>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="deploy" class="section">
+      <div class="section-head">
+        <h2>Deployment paths</h2>
+        <p class="section-copy">同一个项目可以给开发者、管理员和普通员工使用。Python 模式适合维护，EXE 模式适合分发。</p>
+      </div>
+      <div class="flow">
+        <div class="step"><div class="step-number">01</div><h3>Python mode</h3><p>Install requirements, initialize config, run the TUI or dashboard.</p></div>
+        <div class="step"><div class="step-number">02</div><h3>Windows EXE</h3><p>Admin builds once with PyInstaller, then distributes xjlagent.exe.</p></div>
+        <div class="step"><div class="step-number">03</div><h3>Shared storage</h3><p>Point personal and shared data to local or organization paths.</p></div>
+        <div class="step"><div class="step-number">04</div><h3>Internal model</h3><p>Configure model gateway URL and key without changing the executable.</p></div>
+      </div>
+    </section>
+
+    <section id="permissions" class="section">
+      <div class="section-head">
+        <h2>Clear boundaries for every user.</h2>
+        <p class="section-copy">JL-Agent 的核心差异不是“会聊天”，而是把哪些人能运行什么工具说清楚。</p>
+      </div>
+      <table class="compare">
+        <thead><tr><th>Role</th><th>Allowed</th><th>Restricted</th></tr></thead>
+        <tbody>
+          <tr><td><b>Viewer</b></td><td>Chat, document analysis, safe research, /stock report.</td><td>Shell commands, cron install, project mutation.</td></tr>
+          <tr><td><b>Maintainer</b></td><td>Shared knowledge maintenance and approved workflows.</td><td>Admin-only engineering and process controls.</td></tr>
+          <tr><td><b>Admin</b></td><td>Full tool access, cron restore, verification, user management.</td><td>Dangerous operations still require explicit override.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="download" class="cta">
+      <h2>Start from a clean GitHub-ready package.</h2>
+      <p>Use the release ZIP for publishing, the preview image for your repository, and this site draft as the first marketing page direction. Financial workflows are research support only, not trading automation or investment advice.</p>
+      <div class="hero-actions">
+        <a class="button" href="../jl-agent-github-release.zip">Download ZIP</a>
+        <a class="button" href="../jl-agent-github-preview.png">Preview image</a>
+      </div>
+    </section>
+  </main>
+  <footer>JL-Agent - local-first enterprise AI agent. Built for restricted environments, configurable storage and auditable workflows.</footer>
+</body>
+</html>
