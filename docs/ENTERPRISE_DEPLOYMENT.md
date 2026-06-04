@@ -41,11 +41,12 @@ export JL_AGENT_HOME="$HOME/.local/share/jl-agent"
 1. Choose the runtime storage paths for your organization.
 2. Configure model gateway settings in environment variables or the generated JSON config.
 3. Run `python xjlagent.py --self-check` or `dist\xjlagent.exe --self-check`.
-4. In Python mode, run `python tests/offline_smoke.py` before packaging or rollout.
-5. Review [PERMISSION_MATRIX.md](PERMISSION_MATRIX.md) and decide who should be Admin, Maintainer, and Viewer.
-6. Test internal model gateway connectivity.
-7. For Windows end users without Python, build and distribute the EXE.
-8. Review `tool_audit.jsonl` during pilot use.
+4. Run `python xjlagent.py --permission-check` to confirm role boundaries.
+5. In Python mode, run `python tests/offline_smoke.py` before packaging or rollout.
+6. Review [PERMISSION_MATRIX.md](PERMISSION_MATRIX.md) and decide who should be Admin, Maintainer, and Viewer.
+7. Test internal model gateway connectivity.
+8. For Windows end users without Python, build and distribute the EXE.
+9. Review `tool_audit.jsonl` during pilot use.
 
 ## Environment variables
 

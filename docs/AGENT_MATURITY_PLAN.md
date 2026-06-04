@@ -34,7 +34,7 @@ Add low-dependency smoke tests that run without internet or API keys. Keep `pyth
 
 2. Permission hardening
 
-Keep all high-impact local actions Admin-only. Document the tool groups, test the role matrix, and make refusal messages explicit enough for non-technical users.
+Keep all high-impact local actions Admin-only. Document the tool groups, test the role matrix, run `python xjlagent.py --permission-check`, and make refusal messages explicit enough for non-technical users.
 
 3. Task execution loop
 

@@ -85,6 +85,7 @@ python xjlagent.py --print-config
 python xjlagent.py --project-scan
 python xjlagent.py --worktree-status
 python xjlagent.py --verify-suggestions
+python xjlagent.py --permission-check
 python xjlagent.py --run-verify
 python xjlagent.py --audit-log
 python xjlagent.py --dashboard
@@ -252,6 +253,7 @@ Recommended code-work flow:
 JL-Agent is not a full OS sandbox, but it includes local guardrails:
 
 - Enforces role-based tool permissions across TUI and dashboard modes
+- Validates the role matrix with `python xjlagent.py --permission-check`
 - Blocks obvious destructive commands unless explicitly overridden by an administrator
 - Writes tool audit events to `tool_audit.jsonl`
 - Redacts common secret patterns in logs

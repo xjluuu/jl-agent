@@ -16,6 +16,7 @@ Thanks for considering a contribution to JL-Agent.
 ```bash
 python -m pip install -r requirements.txt
 python xjlagent.py --self-check
+python xjlagent.py --permission-check
 python xjlagent.py --release-check
 python tests/offline_smoke.py
 ```
@@ -39,6 +40,7 @@ Run:
 ```bash
 python -m py_compile xjlagent.py
 python xjlagent.py --self-check
+python xjlagent.py --permission-check
 python xjlagent.py --release-check
 python tests/offline_smoke.py
 ```

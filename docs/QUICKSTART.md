@@ -27,6 +27,7 @@ If your internal model gateway does not require authentication, `api.key` can st
 
 ```bash
 python xjlagent.py --self-check
+python xjlagent.py --permission-check
 ```
 
 Warnings are acceptable when they describe optional capabilities, such as missing PDF support.

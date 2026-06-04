@@ -88742,6 +88742,7 @@ try:
         ("/reload_config", "重新加载API配置"),
         ("/selfcheck", "运行环境自检"),
         ("/releasecheck", "运行GitHub发布自检"),
+        ("/permissioncheck", "检查权限矩阵"),
         ("/project", "扫描工程项目"),
         ("/changes", "查看工作树变更"),
         ("/verify", "给出验证命令建议"),
@@ -88758,7 +88759,7 @@ try:
         ("/admin demote ", "取消管理员"),
         ("/admin depro ", "取消管理员（别名）"),
         ("/summary", "查看今日会话摘要（仅管理员）"),
-        ("/导出", "导出当前知识库到 txt"),
+        ("/导出", "导出当前知识库到 txt（仅管理员）"),
         ("/dash", "打开 Web 管理后台（别名）"),
         ("/dashboard", "打开 Web 管理后台"),
         ("/setup", "导入 Hermes 技能"),
@@ -89077,15 +89078,18 @@ DEV_TOOL_NAMES = {
     "execute_command", "write_file", "patch_file", "load_skill", "learn_skill",
     "python_execute", "patch_skill", "delete_skill", "load_all_skills",
     "delegate_task", "process_kill", "exact_patch", "execute_code",
-    "cron_start", "set_model", "project_scan", "worktree_status",
+    "cron_create", "cron_remove", "cron_start", "schedule_task", "cancel_scheduled",
+    "set_model", "project_scan", "worktree_status",
     "verify_suggestions", "task_plan", "preview_patch", "git_diff",
     "run_verification", "stock_market_run_daily", "stock_market_install_cron"
 }
 
 ADMIN_ONLY_TOOL_NAMES = {
     "search_all_sessions", "process_list", "process_wait", "process_poll",
-    "list_models", "audit_log"
+    "list_models", "audit_log", "export_knowledge"
 }
+
+MAINTAINER_TOOL_NAMES = {"learn"}
 
 def get_user_role(user_id=None, data=None):
     uid = user_id or get_user_identity()
@@ -89103,10 +89107,85 @@ def get_allowed_tool_names(user_id=None, data=None):
     all_names = {t["function"]["name"] for t in TOOLS if t.get("function", {}).get("name")}
     if role == "admin":
         return all_names
-    allowed = all_names - DEV_TOOL_NAMES - ADMIN_ONLY_TOOL_NAMES - {"learn"}
+    allowed = all_names - DEV_TOOL_NAMES - ADMIN_ONLY_TOOL_NAMES - MAINTAINER_TOOL_NAMES
     if role == "maintainer":
-        allowed.add("learn")
+        allowed.update(MAINTAINER_TOOL_NAMES & all_names)
     return allowed
+
+def permission_tool_names():
+    return sorted([t["function"]["name"] for t in TOOLS if t.get("function", {}).get("name")])
+
+def permission_level_for_tool(name):
+    if name in MAINTAINER_TOOL_NAMES:
+        return "maintainer"
+    if name in DEV_TOOL_NAMES or name in ADMIN_ONLY_TOOL_NAMES:
+        return "admin"
+    return "viewer"
+
+def permission_matrix_snapshot():
+    users = {
+        "admins": ["admin@host"],
+        "learn_whitelist": ["maintainer@host"],
+        "users": {"admin@host": {}, "maintainer@host": {}, "viewer@host": {}},
+    }
+    roles = {
+        "admin": sorted(get_allowed_tool_names("admin@host", users)),
+        "maintainer": sorted(get_allowed_tool_names("maintainer@host", users)),
+        "viewer": sorted(get_allowed_tool_names("viewer@host", users)),
+    }
+    tools = permission_tool_names()
+    return {
+        "tools": tools,
+        "required_level": {name: permission_level_for_tool(name) for name in tools},
+        "roles": roles,
+        "admin_only": sorted(name for name in tools if permission_level_for_tool(name) == "admin"),
+        "maintainer_plus": sorted(name for name in tools if permission_level_for_tool(name) == "maintainer"),
+        "viewer_safe": sorted(name for name in tools if permission_level_for_tool(name) == "viewer"),
+    }
+
+def collect_permission_check():
+    matrix = permission_matrix_snapshot()
+    checks = []
+    def add(name, status, detail=""):
+        checks.append({"name": name, "status": status, "detail": str(detail or "")})
+
+    tools = matrix["tools"]
+    duplicates = sorted({name for name in tools if tools.count(name) > 1})
+    add("工具Schema唯一性", "FAIL" if duplicates else "OK", ", ".join(duplicates) if duplicates else f"{len(tools)} 个工具")
+
+    high_risk = sorted((DEV_TOOL_NAMES | ADMIN_ONLY_TOOL_NAMES) & set(tools))
+    for role in ("viewer", "maintainer"):
+        allowed = set(matrix["roles"].get(role, []))
+        leaked = sorted(set(high_risk) & allowed)
+        add(f"{role} 高风险工具拦截", "FAIL" if leaked else "OK", ", ".join(leaked) if leaked else f"blocked={len(high_risk)}")
+
+    maintainer_allowed = set(matrix["roles"].get("maintainer", []))
+    viewer_allowed = set(matrix["roles"].get("viewer", []))
+    missing_maintainer = sorted((MAINTAINER_TOOL_NAMES & set(tools)) - maintainer_allowed)
+    viewer_learn = sorted((MAINTAINER_TOOL_NAMES & set(tools)) & viewer_allowed)
+    add("维护员知识库权限", "FAIL" if missing_maintainer else "OK", ", ".join(missing_maintainer) if missing_maintainer else "learn allowed")
+    add("普通用户知识库写入拦截", "FAIL" if viewer_learn else "OK", ", ".join(viewer_learn) if viewer_learn else "learn blocked")
+
+    expected_research = {"parallel_research", "risk_veto_research", "stock_market_report"}
+    missing_research = sorted((expected_research & set(tools)) - viewer_allowed)
+    add("普通用户研究工具", "FAIL" if missing_research else "OK", ", ".join(missing_research) if missing_research else "model-only research allowed")
+
+    unknown_restricted = sorted((DEV_TOOL_NAMES | ADMIN_ONLY_TOOL_NAMES | MAINTAINER_TOOL_NAMES) - set(tools))
+    add("限制集合有效性", "WARN" if unknown_restricted else "OK", ", ".join(unknown_restricted) if unknown_restricted else "all restricted names exist")
+
+    has_fail = any(item["status"] == "FAIL" for item in checks)
+    return checks, 1 if has_fail else 0
+
+def format_permission_check(checks):
+    width = max([len(i["name"]) for i in checks] + [8])
+    lines = ["JL-Agent 权限矩阵检查", "=" * 60]
+    for item in checks:
+        status = item["status"]
+        mark = "[OK]" if status == "OK" else "[!!]" if status == "WARN" else "[X]"
+        lines.append(f"{mark} {item['name']:<{width}} {item['detail']}")
+    lines.append("=" * 60)
+    lines.append("结果: " + ("有失败项，需要修复权限矩阵。" if any(i["status"] == "FAIL" for i in checks) else "权限矩阵通过。"))
+    return "\n".join(lines)
 
 def tool_is_allowed(name, user_id=None, data=None):
     return name in get_allowed_tool_names(user_id=user_id, data=data)
@@ -89115,6 +89194,10 @@ def tool_permission_message(name, user_id=None, data=None):
     role = get_user_role(user_id=user_id, data=data)
     if name == "learn":
         return "你没有知识库投喂权限。请联系管理员授权后再导入业务资料。"
+    if name == "export_knowledge":
+        return "只有管理员可以导出共享知识库。普通用户和维护员不能批量导出知识库内容。"
+    if name in {"cron_create", "cron_remove", "cron_start", "schedule_task", "cancel_scheduled"}:
+        return "只有管理员可以创建、删除或启动持久化任务，避免普通用户误设后台任务。"
     if role == "admin":
         return ""
     if role == "maintainer":
@@ -89973,6 +90056,12 @@ def collect_release_check():
     source_file = os.path.join(root, "xjlagent.py")
     add("主程序", "OK" if os.path.exists(source_file) else "FAIL", "xjlagent.py")
     add("打包配置", "OK" if os.path.exists(os.path.join(root, "xjlagent.spec")) else "WARN", "xjlagent.spec")
+    try:
+        perm_checks, perm_code = collect_permission_check()
+        failed = [i["name"] for i in perm_checks if i.get("status") == "FAIL"]
+        add("权限矩阵", "FAIL" if perm_code else "OK", ", ".join(failed) if failed else f"{len(perm_checks)} 项通过")
+    except Exception as e:
+        add("权限矩阵", "FAIL", e)
 
     risky_present = []
     risky_name_patterns = [
@@ -90350,6 +90439,7 @@ def suggest_verify_commands(root, markers=None, languages=None):
     commands = []
     if "xjlagent.py" in markers:
         commands.append("python xjlagent.py --self-check")
+        commands.append("python xjlagent.py --permission-check")
         commands.append("python xjlagent.py --release-check")
         if os.path.exists(os.path.join(root, "tests", "offline_smoke.py")):
             commands.append("python tests/offline_smoke.py")
@@ -92411,6 +92501,9 @@ class Agent:
             if cmd in ("/releasecheck", "/release-check", "/githubcheck", "/github-check"):
                 checks, _code = collect_release_check()
                 return True, format_release_check(checks)
+            if cmd in ("/permissioncheck", "/permission-check", "/permissions"):
+                checks, _code = collect_permission_check()
+                return True, format_permission_check(checks)
             if cmd.startswith("/project"):
                 if not is_admin():
                     return True, "  只有管理员才能使用工程项目扫描"
@@ -92599,7 +92692,9 @@ class Agent:
                 lines.append(f"\n  共 {len(today_sessions)} 次会话, {total_msgs} 条用户消息")
                 return True, "\n".join(lines)
             if cmd == "/导出":
-                result = self.tools.export_knowledge_base()
+                if not tool_is_allowed("export_knowledge", user_id=USER_ID, data=getattr(self, "_user_data", None)):
+                    return True, tool_permission_message("export_knowledge", user_id=USER_ID, data=getattr(self, "_user_data", None))
+                result = self.tools.execute("export_knowledge", {})
                 if "error" in result:
                     return True, f"  {result['error']}"
                 out_path = result.get("path", "")
@@ -92688,6 +92783,7 @@ class Agent:
                     "  /reload_config  重新加载API配置",
                     "  /selfcheck  运行环境自检",
                     "  /releasecheck  运行GitHub发布自检",
+                    "  /permissioncheck  检查权限矩阵",
                     "  /project [path]  扫描工程项目",
                     "  /changes [path]  查看工作树变更",
                     "  /verify [path]   给出验证命令建议",
@@ -92702,7 +92798,7 @@ class Agent:
                     "  /stats      会话统计",
                     "  /admin     用户管理（仅管理员）",
                     "  /summary   今日会话摘要（仅管理员）",
-                    "  /导出       导出当前知识库到 txt 并打开",
+                    "  /导出       导出当前知识库到 txt 并打开（仅管理员）",
                     "  /dash      打开 Web 管理后台（别名）",
                     "  /dashboard 打开 Web 管理后台",
                     "  /help       显示此帮助",
@@ -98097,6 +98193,7 @@ def _handle_dashboard_cmd(messages, user_id=""):
                 "/reload_config  重新加载API配置\n"
                 "/selfcheck  运行环境自检\n"
                 "/releasecheck  运行GitHub发布自检\n"
+                "/permissioncheck  检查权限矩阵\n"
                 "/project [path]  扫描工程项目\n"
                 "/changes [path]  查看工作树变更\n"
                 "/verify [path]   给出验证命令建议\n"
@@ -98104,7 +98201,7 @@ def _handle_dashboard_cmd(messages, user_id=""):
                 "/runverify [path]  运行验证流水线\n"
                 "/gitdiff [path]    查看Git diff\n"
                 "/audit [n]         查看工具审计日志\n"
-                "/导出    导出当前知识库到 txt\n"
+                "/导出    导出当前知识库到 txt（仅管理员）\n"
                 "/dash    打开 Web 管理后台（别名）\n"
                 "/skills  列出可用技能\n"
                 "/setup   查看技能信息\n"
@@ -98179,6 +98276,13 @@ def _handle_dashboard_cmd(messages, user_id=""):
             return format_release_check(checks)
         except Exception as e:
             return f"发布自检失败: {e}"
+
+    if name in ("/permissioncheck", "/permission-check", "/permissions"):
+        try:
+            checks, _code = collect_permission_check()
+            return format_permission_check(checks)
+        except Exception as e:
+            return f"权限矩阵检查失败: {e}"
 
     if name == "/project":
         if not is_admin():
@@ -98263,10 +98367,7 @@ def _handle_dashboard_cmd(messages, user_id=""):
             return f"读取审计日志失败: {e}"
 
     if name == "/导出":
-        tools = _get_tool_executor()
-        if not tools:
-            return "工具层未加载，无法导出知识库。"
-        result = tools.export_knowledge_base()
+        result = _execute_tool("export_knowledge", {})
         if "error" in result:
             return result["error"]
         out_path = result.get("path", "")
@@ -99018,6 +99119,10 @@ if __name__ == "__main__":
     elif '--license-status' in sys.argv:
         print(print_license_status())
         sys.exit(0 if license_status().get("active") else 1)
+    elif '--permission-check' in sys.argv:
+        checks, code = collect_permission_check()
+        print(format_permission_check(checks))
+        sys.exit(code)
     elif '--activate' in sys.argv:
         print("免费开源版无需激活，直接运行即可。")
         sys.exit(0)

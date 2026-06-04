@@ -10,6 +10,7 @@ JL-Agent provides local guardrails, not a full sandbox.
 - Patch/file-write diffs
 - Backups for edited files
 - Role-based restrictions for development tools
+- Permission matrix self-check with `python xjlagent.py --permission-check`
 
 ## Role model
 
@@ -52,5 +53,6 @@ JL_AGENT_ALLOW_DANGEROUS=1
 - Container isolation
 - Cloud-managed execution sandboxes
 - Enterprise endpoint policy enforcement
+- Data loss prevention outside OS-level permissions
 
 Use VM/container/endpoint controls when stronger isolation is required.

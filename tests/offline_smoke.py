@@ -55,8 +55,19 @@ def main() -> int:
         maintainer_tools = agent.get_allowed_tool_names("maintainer@host", users)
         viewer_tools = agent.get_allowed_tool_names("viewer@host", users)
 
-        admin_required = {"execute_command", "write_file", "run_verification", "stock_market_run_daily"}
-        dev_blocked = {"execute_command", "write_file", "patch_file", "run_verification", "stock_market_run_daily"}
+        admin_required = {"execute_command", "write_file", "run_verification", "stock_market_run_daily", "cron_create", "schedule_task", "export_knowledge"}
+        dev_blocked = {
+            "execute_command",
+            "write_file",
+            "patch_file",
+            "run_verification",
+            "stock_market_run_daily",
+            "cron_create",
+            "cron_remove",
+            "schedule_task",
+            "cancel_scheduled",
+            "export_knowledge",
+        }
         research_allowed = {"parallel_research", "risk_veto_research", "stock_market_report"}
 
         check("admin keeps development tools", admin_required.issubset(admin_tools), str(sorted(admin_required - admin_tools)))
@@ -65,6 +76,22 @@ def main() -> int:
         check("maintainer can ingest knowledge", "learn" in maintainer_tools, "")
         check("viewer cannot ingest knowledge", "learn" not in viewer_tools, "")
         check("model-only research is broadly available", research_allowed.issubset(viewer_tools), str(sorted(research_allowed - viewer_tools)))
+
+        permission_checks, permission_code = agent.collect_permission_check()
+        check("permission matrix check passes", permission_code == 0, str(permission_checks))
+
+        agent.save_users(users)
+        memory = agent.Memory()
+        try:
+            tools = agent.Tools(memory)
+            tools.user_id = "viewer@host"
+            denied = tools.execute("execute_command", {"command": "echo should_not_run"})
+            check("tool executor denies viewer command execution", isinstance(denied, dict) and "error" in denied, str(denied))
+            tools.user_id = "maintainer@host"
+            denied_export = tools.execute("export_knowledge", {})
+            check("tool executor denies maintainer knowledge export", isinstance(denied_export, dict) and "error" in denied_export, str(denied_export))
+        finally:
+            memory.close()
 
         check("development classifier catches code work", agent.looks_like_development_request("帮我写一个 Python 脚本修 bug"), "")
         check("development classifier allows research", not agent.looks_like_development_request("总结这些会议纪要里的风险"), "")
@@ -87,6 +114,7 @@ def main() -> int:
         scan = agent.collect_project_scan(str(repo_root), max_files=2500)
         verify_commands = scan.get("verify_commands") or []
         check("offline smoke appears in verify suggestions", any("tests/offline_smoke.py" in c for c in verify_commands), str(verify_commands))
+        check("permission check appears in verify suggestions", any("--permission-check" in c for c in verify_commands), str(verify_commands))
     finally:
         temp_root.cleanup()
 

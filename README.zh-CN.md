@@ -75,6 +75,7 @@ python xjlagent.py --config-path
 python xjlagent.py --print-config
 python xjlagent.py --project-scan
 python xjlagent.py --worktree-status
+python xjlagent.py --permission-check
 python xjlagent.py --run-verify
 python xjlagent.py --dashboard
 ```
