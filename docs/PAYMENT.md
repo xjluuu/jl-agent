@@ -88,6 +88,8 @@ set JL_AGENT_WECHAT_QR=C:\path\to\wechat_qr.png
 python xjlagent.py --dashboard
 ```
 
+For a private customer EXE, put `payment/wechat_qr.png` in the project folder before running `build_xjlagent_exe.bat`. The spec automatically embeds that local file into `xjlagent.exe`, so the customer package does not need to expose a separate QR image file. The QR is still visible when the app opens the payment page, and users can always screenshot it; this is packaging hygiene, not copy protection.
+
 ## Notes
 
 Payment only covers setup, deployment support, documentation, and customization work. It does not sell the open-source code itself.

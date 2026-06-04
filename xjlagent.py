@@ -89470,14 +89470,16 @@ def payment_settings():
         if os.path.isabs(expanded):
             return os.path.abspath(expanded)
         base = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
+        bundled_base = getattr(sys, "_MEIPASS", "")
         candidates = [
+            os.path.abspath(os.path.join(bundled_base, expanded)) if bundled_base else "",
             os.path.abspath(os.path.join(base, expanded)),
             os.path.abspath(os.path.join(os.getcwd(), expanded)),
         ]
         for candidate in candidates:
-            if os.path.exists(candidate):
+            if candidate and os.path.exists(candidate):
                 return candidate
-        return candidates[0]
+        return next((candidate for candidate in candidates if candidate), "")
     return {
         "wechat_qr": resolve_qr_path(qr),
         "wechat_name": str(raw.get("wechat_name", "WeChat Pay") or "WeChat Pay").strip(),

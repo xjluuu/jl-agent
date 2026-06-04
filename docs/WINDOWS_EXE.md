@@ -30,7 +30,8 @@ build_xjlagent_exe.bat
 - For normal company Intel/AMD PCs, build on Windows x64.
 - `PyMuPDF` is optional. Without it, PDF parsing will show a warning but the agent can still run.
 - The generated EXE reads config from the runtime config path; API settings can be changed without rebuilding.
-- To show your WeChat payment QR in Dashboard, create `dist\payment\wechat_qr.png` next to `dist\xjlagent.exe`, or set `JL_AGENT_WECHAT_QR` to another local image path before launching the EXE.
+- To embed your WeChat payment QR into the private EXE, create `payment\wechat_qr.png` before running `build_xjlagent_exe.bat`. Keep this file out of public GitHub; the `payment\` folder is ignored by Git.
+- If you do not embed it, the Dashboard can still read `dist\payment\wechat_qr.png` next to `dist\xjlagent.exe`, or `JL_AGENT_WECHAT_QR` can point to another local image path.
 - On first normal launch, the EXE shows the plan menu. Trial enters directly; paid plans show the payment page and require a manual activation code after payment.
 
 ## Manual activation
