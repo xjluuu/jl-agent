@@ -67,3 +67,30 @@ Then start the dashboard and click `Plans`. The modal shows:
 - Custom Enterprise: quote by scope
 
 Do not commit the `payment/` folder to a public repository.
+
+## Trial and activation
+
+When launching the normal terminal UI, JL-Agent checks the local license first:
+
+- `7-Day Trial`: writes a local 7-day trial license and enters the UI.
+- `30-Day Express`: opens the payment page, then waits for an activation code.
+- `Lifetime`: opens the payment page, then waits for an activation code.
+
+Generate the machine code:
+
+```bash
+python xjlagent.py --machine-code
+```
+
+Generate an activation code after payment:
+
+```bash
+python xjlagent.py --make-activation express MACHINE_CODE
+python xjlagent.py --make-activation lifetime MACHINE_CODE
+```
+
+Activate:
+
+```bash
+python xjlagent.py --activate ACTIVATION_CODE
+```

@@ -89496,6 +89496,283 @@ def payment_public_info():
         "qr_path": qr_path if qr_available else qr_path,
     }
 
+LICENSE_FILE = os.path.join(PERSONAL_DATA_DIR, "license.json")
+
+def _license_secret():
+    return os.environ.get("JL_AGENT_LICENSE_SECRET", "jl-agent-public-demo-secret-v1")
+
+def _license_date_text(days):
+    return (datetime.date.today() + datetime.timedelta(days=int(days))).isoformat()
+
+def _parse_license_date(value):
+    try:
+        return datetime.date.fromisoformat(str(value or "")[:10])
+    except Exception:
+        return None
+
+def license_machine_code():
+    import hashlib
+    seed = "|".join([
+        platform.node() or "",
+        os.environ.get("COMPUTERNAME") or os.environ.get("HOSTNAME") or "",
+        os.environ.get("USERNAME") or os.environ.get("USER") or "",
+        str(uuid.getnode()),
+        sys.platform,
+    ])
+    return hashlib.sha256(seed.encode("utf-8", errors="replace")).hexdigest()[:16].upper()
+
+def _load_license_file():
+    if not os.path.exists(LICENSE_FILE):
+        return {}
+    try:
+        with open(LICENSE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+def _write_license_file(data):
+    os.makedirs(os.path.dirname(LICENSE_FILE), exist_ok=True)
+    tmp = LICENSE_FILE + f".{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+    os.replace(tmp, LICENSE_FILE)
+
+def _activation_payload_b64(payload):
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+def _activation_sign(payload_b64):
+    import hashlib, hmac
+    return hmac.new(_license_secret().encode("utf-8"), payload_b64.encode("ascii"), hashlib.sha256).hexdigest()[:24].upper()
+
+def make_activation_code(plan, machine_code, days=None):
+    plan = str(plan or "").strip().lower()
+    aliases = {
+        "30": "express",
+        "30day": "express",
+        "30-day": "express",
+        "express": "express",
+        "lifetime": "lifetime",
+        "permanent": "lifetime",
+        "forever": "lifetime",
+    }
+    plan = aliases.get(plan, plan)
+    if plan not in ("express", "lifetime"):
+        raise ValueError("plan must be express or lifetime")
+    machine = str(machine_code or "").strip().upper()
+    if not re.fullmatch(r"[A-F0-9]{16}", machine):
+        raise ValueError("machine code must be 16 hex characters")
+    if plan == "express":
+        expires = _license_date_text(int(days or 30))
+    else:
+        expires = ""
+    payload = {
+        "plan": plan,
+        "machine": machine,
+        "expires": expires,
+        "issued": datetime.date.today().isoformat(),
+    }
+    payload_b64 = _activation_payload_b64(payload)
+    return "JLA1." + payload_b64 + "." + _activation_sign(payload_b64)
+
+def verify_activation_code(code):
+    text = str(code or "").strip()
+    parts = text.split(".")
+    if len(parts) != 3 or parts[0] != "JLA1":
+        return False, {}, "激活码格式不正确"
+    payload_b64, sig = parts[1], parts[2].upper()
+    expected = _activation_sign(payload_b64)
+    if sig != expected:
+        return False, {}, "激活码签名不匹配"
+    try:
+        padded = payload_b64 + "=" * (-len(payload_b64) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8"))
+    except Exception:
+        return False, {}, "激活码内容无法读取"
+    machine = license_machine_code()
+    if str(payload.get("machine", "")).upper() != machine:
+        return False, payload, f"激活码机器码不匹配；本机机器码是 {machine}"
+    expires = _parse_license_date(payload.get("expires", ""))
+    if expires and datetime.date.today() > expires:
+        return False, payload, f"激活码已过期: {expires.isoformat()}"
+    if payload.get("plan") not in ("express", "lifetime"):
+        return False, payload, "激活码套餐不正确"
+    return True, payload, "OK"
+
+def license_status():
+    data = _load_license_file()
+    machine = license_machine_code()
+    base = {
+        "active": False,
+        "plan": "",
+        "expires": "",
+        "machine_code": machine,
+        "license_file": LICENSE_FILE,
+        "trial_available": True,
+        "reason": "未激活",
+    }
+    if data.get("trial_used"):
+        base["trial_available"] = False
+    if data.get("type") == "trial":
+        base["trial_available"] = False
+        expires = _parse_license_date(data.get("expires"))
+        base["plan"] = "trial"
+        base["expires"] = expires.isoformat() if expires else ""
+        if expires and datetime.date.today() <= expires:
+            base["active"] = True
+            base["reason"] = "7 天试用中"
+        else:
+            base["reason"] = "7 天试用已过期"
+        return base
+    if data.get("type") == "activation" and data.get("code"):
+        ok, payload, reason = verify_activation_code(data.get("code"))
+        base["plan"] = str(payload.get("plan", "") or "")
+        base["expires"] = str(payload.get("expires", "") or "")
+        base["active"] = bool(ok)
+        base["reason"] = "已激活" if ok else reason
+        return base
+    return base
+
+def start_trial_license():
+    status = license_status()
+    if not status.get("trial_available"):
+        return False, status, "7 天试用已经使用过"
+    data = {
+        "type": "trial",
+        "plan": "trial",
+        "started": datetime.date.today().isoformat(),
+        "expires": _license_date_text(7),
+        "machine": license_machine_code(),
+        "trial_used": True,
+    }
+    _write_license_file(data)
+    return True, license_status(), "试用已开启"
+
+def activate_license(code):
+    ok, payload, reason = verify_activation_code(code)
+    if not ok:
+        return False, license_status(), reason
+    data = {
+        "type": "activation",
+        "code": str(code or "").strip(),
+        "plan": payload.get("plan", ""),
+        "expires": payload.get("expires", ""),
+        "activated": datetime.datetime.now().isoformat(),
+        "machine": license_machine_code(),
+        "trial_used": bool(_load_license_file().get("trial_used")),
+    }
+    _write_license_file(data)
+    return True, license_status(), "激活成功"
+
+def license_block_message():
+    status = license_status()
+    return (
+        "JL-Agent 尚未激活，聊天和工具调用已暂停。\n"
+        f"状态: {status.get('reason')}\n"
+        f"机器码: {status.get('machine_code')}\n"
+        "点击 Dashboard 的 Plans 查看 7 天试用、30 天极速版或终身版。\n"
+        "付款后把机器码发给作者，收到激活码后在终端运行: xjlagent --activate <激活码>"
+    )
+
+def _script_command(extra_args=None):
+    extra_args = list(extra_args or [])
+    if getattr(sys, "frozen", False):
+        return [sys.executable] + extra_args
+    return [sys.executable, os.path.abspath(__file__)] + extra_args
+
+def launch_payment_dashboard(plan="express"):
+    import socket, webbrowser
+    running = False
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        running = sock.connect_ex(("127.0.0.1", 18888)) == 0
+    finally:
+        sock.close()
+    if not running:
+        kwargs = {}
+        if IS_WINDOWS:
+            kwargs["creationflags"] = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
+        else:
+            kwargs["stdout"] = subprocess.DEVNULL
+            kwargs["stderr"] = subprocess.DEVNULL
+        try:
+            subprocess.Popen(_script_command(["--dashboard"]), **kwargs)
+            time.sleep(1.2)
+        except Exception as e:
+            print(f"[WARN] Dashboard 启动失败: {e}")
+    url = f"http://127.0.0.1:18888/?plan={urllib.parse.quote(str(plan or 'express'))}"
+    try:
+        webbrowser.open(url)
+    except Exception:
+        pass
+    print(f"付款页: {url}")
+    return url
+
+def print_license_status():
+    status = license_status()
+    lines = [
+        "JL-Agent 授权状态",
+        "=" * 48,
+        f"状态: {'ACTIVE' if status.get('active') else 'INACTIVE'}",
+        f"原因: {status.get('reason')}",
+        f"套餐: {status.get('plan') or '-'}",
+        f"到期: {status.get('expires') or '无'}",
+        f"机器码: {status.get('machine_code')}",
+        f"授权文件: {status.get('license_file')}",
+    ]
+    return "\n".join(lines)
+
+def ensure_license_interactive():
+    status = license_status()
+    if status.get("active"):
+        return True
+    while True:
+        status = license_status()
+        print("\n" + print_license_status())
+        print("\n请选择：")
+        if status.get("trial_available"):
+            print("  1) 开启 7 天试用，免费进入")
+        else:
+            print("  1) 7 天试用已使用")
+        print("  2) 30-Day Express - $3.90，打开微信收款码")
+        print("  3) Lifetime - $9.90，打开微信收款码")
+        print("  4) 输入激活码")
+        print("  0) 退出")
+        choice = input("选择: ").strip()
+        if choice == "1":
+            ok, new_status, msg = start_trial_license()
+            print(msg)
+            if ok and new_status.get("active"):
+                return True
+        elif choice == "2":
+            launch_payment_dashboard("express")
+            print("\n付款后，把上面的机器码发给作者。收到激活码后粘贴到这里。")
+            code = input("激活码（直接回车返回菜单）: ").strip()
+            if code:
+                ok, _, msg = activate_license(code)
+                print(msg)
+                if ok:
+                    return True
+        elif choice == "3":
+            launch_payment_dashboard("lifetime")
+            print("\n付款后，把上面的机器码发给作者。收到激活码后粘贴到这里。")
+            code = input("激活码（直接回车返回菜单）: ").strip()
+            if code:
+                ok, _, msg = activate_license(code)
+                print(msg)
+                if ok:
+                    return True
+        elif choice == "4":
+            code = input("激活码: ").strip()
+            ok, _, msg = activate_license(code)
+            print(msg)
+            if ok:
+                return True
+        elif choice == "0":
+            return False
+
 def stock_research_dirs_from_cron_jobs():
     cron_files = [
         os.path.join(PERSONAL_DATA_DIR, "cron_jobs.json"),
@@ -89914,6 +90191,13 @@ def collect_self_check(check_api=False):
         add("微信收款码", "OK" if qr_ok else "WARN", qr_path if qr_path else "未配置；可设置 payment/wechat_qr.png 或 JL_AGENT_WECHAT_QR")
     except Exception as e:
         add("微信收款码", "WARN", e)
+
+    try:
+        lic = license_status()
+        detail = f"{lic.get('reason')}; plan={lic.get('plan') or '-'}; expires={lic.get('expires') or '无'}; machine={lic.get('machine_code')}"
+        add("授权状态", "OK" if lic.get("active") else "WARN", detail)
+    except Exception as e:
+        add("授权状态", "WARN", e)
 
     if shutil.which("curl"):
         add("curl", "OK", shutil.which("curl"))
@@ -98201,6 +98485,10 @@ async function boot() {
   bindEvents();
   resetConversation();
   await Promise.all([loadConfig(), loadUsers(), loadSkills(), loadTasks()]);
+  const startupPlan = new URLSearchParams(window.location.search).get('plan');
+  if (startupPlan) {
+    openPaymentModal(startupPlan);
+  }
   setInterval(loadUsers, 15000);
   setInterval(loadTasks, 30000);
 }
@@ -98799,6 +99087,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 requested_session_id = str(b.get("session_id", "") or "").strip()
                 new_session = bool(b.get("new_session"))
                 session_id = _start_new_dashboard_session() if new_session else (requested_session_id or _load_dashboard_session_id())
+                if not license_status().get("active"):
+                    reply = license_block_message()
+                    self._json({"reply": reply, "messages": msgs + [{"role":"assistant","content":reply}], "tool_events": [], "session_id": session_id})
+                    return
                 cmd_reply = _handle_dashboard_cmd(msgs, get_user_identity())
                 if cmd_reply:
                     self._json({"reply": cmd_reply, "messages": msgs + [{"role":"assistant","content":cmd_reply}], "tool_events": [], "session_id": session_id})
@@ -98825,6 +99117,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 requested_session_id = str(b.get("session_id", "") or "").strip()
                 new_session = bool(b.get("new_session"))
                 session_id = _start_new_dashboard_session() if new_session else (requested_session_id or _load_dashboard_session_id())
+                if not license_status().get("active"):
+                    self.send_response(200)
+                    self.send_header("Content-Type","text/event-stream; charset=utf-8")
+                    self.send_header("Cache-Control","no-cache")
+                    self.send_header("Connection","close")
+                    self.end_headers()
+                    reply = license_block_message()
+                    packet = {"type":"final","reply":reply,"messages":msgs + [{"role":"assistant","content":reply}],"tool_events":[],"session_id":session_id}
+                    self.wfile.write(f"data: {json.dumps(packet, ensure_ascii=False)}\n\n".encode("utf-8"))
+                    return
                 cmd_reply = _handle_dashboard_cmd(msgs, get_user_identity())
                 if cmd_reply:
                     self.send_response(200)
@@ -99049,6 +99351,8 @@ def _run_embedded_dashboard():
         'load_recent_audit': load_recent_audit,
         'format_audit_log': format_audit_log,
         'payment_public_info': payment_public_info,
+        'license_status': license_status,
+        'license_block_message': license_block_message,
     }
     exec(EMBEDDED_DASHBOARD_SOURCE, ns, ns)
     start = ns.get('start_server')
@@ -99298,6 +99602,29 @@ if __name__ == "__main__":
         result = init_runtime_config(force='--force' in sys.argv)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         sys.exit(0)
+    elif '--machine-code' in sys.argv:
+        print(license_machine_code())
+        sys.exit(0)
+    elif '--license-status' in sys.argv:
+        print(print_license_status())
+        sys.exit(0 if license_status().get("active") else 1)
+    elif '--activate' in sys.argv:
+        idx = sys.argv.index('--activate')
+        code = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else input("激活码: ").strip()
+        ok, _, msg = activate_license(code)
+        print(msg)
+        sys.exit(0 if ok else 1)
+    elif '--make-activation' in sys.argv:
+        idx = sys.argv.index('--make-activation')
+        try:
+            plan = sys.argv[idx + 1]
+            machine = sys.argv[idx + 2]
+            days = int(sys.argv[idx + 3]) if idx + 3 < len(sys.argv) and not sys.argv[idx + 3].startswith("--") else None
+            print(make_activation_code(plan, machine, days=days))
+            sys.exit(0)
+        except Exception as e:
+            print(f"用法: --make-activation express|lifetime <machine_code> [days]\n错误: {e}")
+            sys.exit(1)
     elif '--release-check' in sys.argv or '--github-check' in sys.argv:
         sys.exit(run_release_check())
     elif '--project-scan' in sys.argv:
@@ -99345,4 +99672,7 @@ if __name__ == "__main__":
     elif '--dashboard' in sys.argv:
         _run_embedded_dashboard()
     else:
-        Agent().run_cli()
+        if ensure_license_interactive():
+            Agent().run_cli()
+        else:
+            sys.exit(1)

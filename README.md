@@ -186,6 +186,8 @@ See [config.example.json](config.example.json).
 
 For the optional local dashboard payment modal, put your WeChat payment QR image at `payment/wechat_qr.png`, or set `JL_AGENT_WECHAT_QR` to a local image path. The `payment/` folder is ignored by Git and should not be committed.
 
+The normal terminal UI uses a lightweight local license flow: 7-day trial, 30-day Express activation, or Lifetime activation. After manual payment, generate an activation code with `python xjlagent.py --make-activation express MACHINE_CODE` or `python xjlagent.py --make-activation lifetime MACHINE_CODE`.
+
 ## Website
 
 The project landing page lives in [site/](site/). The included GitHub Pages workflow publishes that folder when changes are pushed to `main`.

@@ -111,6 +111,8 @@ JL-Agent 不要求固定盘符，也不假设必须有某个共享盘。默认�
 
 本地 Dashboard 的付款弹窗会读取 `payment/wechat_qr.png`，也可以用 `JL_AGENT_WECHAT_QR` 指向其他本地图片。`payment/` 目录已被 Git 忽略，不要提交真实收款码。
 
+普通终端 UI 启动前会走轻量本地授权流程：7 天试用、30 天极速版激活、终身版激活。人工确认付款后，用 `python xjlagent.py --make-activation express MACHINE_CODE` 或 `python xjlagent.py --make-activation lifetime MACHINE_CODE` 生成激活码。
+
 Windows 示例：
 
 ```bat

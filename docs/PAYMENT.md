@@ -28,6 +28,37 @@ For non-China clients, use a separate method such as PayPal, Wise, Stripe, Paddl
 4. Confirm payment received before starting delivery work.
 5. Deliver setup notes, configuration guidance, or handover files.
 
+## EXE Trial And Manual Activation
+
+For the lightweight paid EXE flow:
+
+1. The client runs `xjlagent.exe`.
+2. JL-Agent shows the plan menu before entering the terminal UI.
+3. If the client chooses `7-Day Trial`, JL-Agent writes a local 7-day license and enters the terminal UI.
+4. If the client chooses `30-Day Express` or `Lifetime`, JL-Agent opens the local Dashboard payment page and shows the machine code.
+5. The client pays with WeChat Pay and sends you the machine code.
+6. You generate an activation code:
+
+```bash
+python xjlagent.py --make-activation express MACHINE_CODE
+python xjlagent.py --make-activation lifetime MACHINE_CODE
+```
+
+7. The client activates:
+
+```bat
+xjlagent.exe --activate ACTIVATION_CODE
+```
+
+Useful support commands:
+
+```bash
+python xjlagent.py --machine-code
+python xjlagent.py --license-status
+```
+
+This is a lightweight offline activation flow for low-price distribution. It is not strong DRM. Because JL-Agent is open source, determined users can modify the code. For serious automatic billing and enforcement, use a real merchant payment API and a server-side license service.
+
 ## What Not To Publish
 
 Do not commit personal payment QR codes, merchant private keys, API credentials, phone numbers, ID documents, bank details, or invoices with private information to this public repository.

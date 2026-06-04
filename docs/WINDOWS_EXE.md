@@ -31,3 +31,21 @@ build_xjlagent_exe.bat
 - `PyMuPDF` is optional. Without it, PDF parsing will show a warning but the agent can still run.
 - The generated EXE reads config from the runtime config path; API settings can be changed without rebuilding.
 - To show your WeChat payment QR in Dashboard, create `dist\payment\wechat_qr.png` next to `dist\xjlagent.exe`, or set `JL_AGENT_WECHAT_QR` to another local image path before launching the EXE.
+- On first normal launch, the EXE shows the plan menu. Trial enters directly; paid plans show the payment page and require a manual activation code after payment.
+
+## Manual activation
+
+Client side:
+
+```bat
+dist\xjlagent.exe --machine-code
+dist\xjlagent.exe --activate ACTIVATION_CODE
+dist\xjlagent.exe --license-status
+```
+
+Seller side after payment:
+
+```bat
+python xjlagent.py --make-activation express MACHINE_CODE
+python xjlagent.py --make-activation lifetime MACHINE_CODE
+```
