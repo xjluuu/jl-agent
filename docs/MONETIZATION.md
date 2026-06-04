@@ -1,6 +1,11 @@
 # Commercial Services
 
-JL-Agent is open source. Commercial support can be offered around deployment and customization.
+JL-Agent is open source. Commercial support should focus on deployment and customization, not on selling the code itself.
+
+Public service entry:
+
+- Website: https://xjluuu.github.io/jl-agent/#services
+- GitHub request form: https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml
 
 Example service packages:
 
@@ -39,3 +44,5 @@ Price idea: custom quote
 - Custom risk-veto rule packs
 
 This document is intentionally generic. Adapt pricing and terms to your region, legal situation, and customer requirements.
+
+Important boundary: financial and stock-market workflows are research support only. Do not sell JL-Agent as investment advice, automated trading, guaranteed returns, or a regulated financial product.

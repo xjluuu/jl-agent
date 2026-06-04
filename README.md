@@ -185,6 +185,18 @@ See [config.example.json](config.example.json).
 
 The project landing page lives in [site/](site/). The included GitHub Pages workflow publishes that folder when changes are pushed to `main`.
 
+## Commercial Support
+
+JL-Agent is open source and free to use. Paid support is available for teams that want help with restricted-environment deployment:
+
+- **Starter Setup - USD 99**: Python or Windows EXE startup check, external config, storage layout, and basic permission handover.
+- **Enterprise Pilot - USD 499+**: Windows EXE packaging plan, internal model gateway configuration, shared storage, role-based permissions, audit review, and optional `/stock` report bridge validation.
+- **Custom Workflow - quote by scope**: local knowledge ingestion, approval flows, research workflows, department permissions, and offline handover documentation.
+
+Open a [paid setup request](https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml) or visit the [services section](https://xjluuu.github.io/jl-agent/#services).
+
+Financial workflows are research support only. JL-Agent does not provide investment advice, does not place trades, and does not replace your organization's compliance review.
+
 ## Engineering Workflow
 
 JL-Agent includes a local engineering workflow layer:

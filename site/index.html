@@ -323,6 +323,69 @@
       line-height: 1.5;
     }
     .compare td b { color: var(--text); }
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 28px;
+    }
+    .price-card {
+      min-height: 270px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.045);
+    }
+    .price-card.featured {
+      background: #f4f7fb;
+      color: #0b1117;
+      border-color: #f4f7fb;
+    }
+    .price-card h3 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+    .price {
+      font-size: 36px;
+      line-height: 1;
+      font-weight: 800;
+    }
+    .price span {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .price-card.featured .price span,
+    .price-card.featured p,
+    .price-card.featured li {
+      color: #526071;
+    }
+    .price-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .price-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .price-card .button {
+      width: fit-content;
+      margin-top: auto;
+    }
+    .service-note {
+      margin-top: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 880px;
+    }
     .cta {
       padding: 82px clamp(22px, 5vw, 72px);
       background: #f4f7fb;
@@ -361,6 +424,7 @@
       .section-copy { margin-top: 14px; }
       .tile.large, .tile.medium { grid-column: span 12; }
       .flow { grid-template-columns: 1fr; }
+      .pricing { grid-template-columns: 1fr; }
       .compare { display: block; overflow-x: auto; }
     }
   </style>
@@ -373,6 +437,7 @@
       <a href="#deploy">Deploy</a>
       <a href="#stock">Stock Research</a>
       <a href="#permissions">Permissions</a>
+      <a href="#services">Services</a>
       <a class="nav-cta" href="#download">Download</a>
     </div>
   </nav>
@@ -504,11 +569,55 @@ A股投研日报
       </table>
     </section>
 
+    <section id="services" class="section">
+      <div class="section-head">
+        <h2>Paid setup for teams that need it running.</h2>
+        <p class="section-copy">The project is open source and free to use. Paid support is for teams that want JL-Agent packaged, configured, documented and handed over for restricted company environments.</p>
+      </div>
+      <div class="pricing">
+        <article class="price-card">
+          <h3>Starter Setup</h3>
+          <div class="price">$99 <span>fixed scope</span></div>
+          <p>Best for one team lead validating JL-Agent on a controlled machine.</p>
+          <ul>
+            <li>Python or Windows EXE startup check</li>
+            <li>External config and storage layout</li>
+            <li>Basic permission explanation</li>
+          </ul>
+          <a class="button" href="https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml">Request setup</a>
+        </article>
+        <article class="price-card featured">
+          <h3>Enterprise Pilot</h3>
+          <div class="price">$499+ <span>deployment pilot</span></div>
+          <p>For restricted office environments, shared storage, internal model gateways and non-Python coworkers.</p>
+          <ul>
+            <li>EXE packaging plan and handover checklist</li>
+            <li>Role, audit and safe-tool configuration</li>
+            <li>Optional /stock report bridge validation</li>
+          </ul>
+          <a class="button primary" href="https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml">Start pilot</a>
+        </article>
+        <article class="price-card">
+          <h3>Custom Workflow</h3>
+          <div class="price">Quote <span>by scope</span></div>
+          <p>For teams that need local knowledge ingestion, research workflows, approvals or internal process automation.</p>
+          <ul>
+            <li>Private workflow design</li>
+            <li>Department-specific permissions</li>
+            <li>Offline handover documentation</li>
+          </ul>
+          <a class="button" href="https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml">Describe workflow</a>
+        </article>
+      </div>
+      <p class="service-note">Financial workflows are research support only. JL-Agent does not place trades, does not provide investment advice, and should be reviewed under your organization's compliance process before production use.</p>
+    </section>
+
     <section id="download" class="cta">
       <h2>Start from a clean GitHub-ready package.</h2>
-      <p>Use the release ZIP for publishing, the preview image for your repository, and this site draft as the first marketing page direction. Financial workflows are research support only, not trading automation or investment advice.</p>
+      <p>Download the open-source package, inspect the preview image, or open a setup request if you want help packaging JL-Agent for a restricted company environment.</p>
       <div class="hero-actions">
         <a class="button" href="https://github.com/xjluuu/jl-agent/archive/refs/heads/main.zip">Download ZIP</a>
+        <a class="button" href="https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml">Request paid setup</a>
         <a class="button" href="assets/github-preview.png">Preview image</a>
       </div>
     </section>

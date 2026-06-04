@@ -141,6 +141,18 @@ prepare_offline_wheels.bat
 
 项目介绍网站源码在 [site/](site/)。仓库内置 GitHub Pages workflow，推送到 `main` 后可以自动发布这个目录。
 
+## 付费部署服务
+
+JL-Agent 是开源项目，可以免费使用。付费服务只面向希望把它真正落地到受限公司环境的团队：
+
+- **Starter Setup - 99 美元**：Python 或 Windows EXE 启动检查、外部配置、存储路径和基础权限交接。
+- **Enterprise Pilot - 499 美元起**：Windows EXE 打包方案、内网模型网关配置、共享存储、角色权限、审计检查，以及可选 `/stock` 投研日报桥接验证。
+- **Custom Workflow - 按范围报价**：本地知识库导入、审批流程、研究工作流、部门权限、离线交接文档。
+
+可以提交 [paid setup request](https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml)，也可以查看官网的 [services section](https://xjluuu.github.io/jl-agent/#services)。
+
+金融/股市相关能力只用于研究辅助。JL-Agent 不提供投资建议，不执行交易，也不能替代公司合规审查。
+
 ## 安全说明
 
 不要提交真实 API Key、运行时配置、数据库、日志、公司文档或知识库文件。公开仓库只应包含源码、文档、示例配置和打包脚本。

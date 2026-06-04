@@ -16,7 +16,8 @@ I built JL-Agent: a one-file local AI agent for restricted enterprise environmen
 - Project scan + verification workflow
 - No Docker required
 
-GitHub: <repo-url>
+GitHub: https://github.com/xjluuu/jl-agent
+Website: https://xjluuu.github.io/jl-agent/
 
 ## Hacker News
 
@@ -60,7 +61,8 @@ Features:
 
 I would appreciate feedback from anyone who has tried deploying AI tools inside restricted company networks.
 
-GitHub: <repo-url>
+GitHub: https://github.com/xjluuu/jl-agent
+Website: https://xjluuu.github.io/jl-agent/
 ```
 
 ## Service offer
@@ -76,5 +78,7 @@ I also offer paid setup for teams that need help deploying JL-Agent internally:
 - run self-check
 - prepare deployment notes
 
-Contact: <your-contact>
+Contact: https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml
 ```
+
+See [CHANNEL_LAUNCH_PACK.md](CHANNEL_LAUNCH_PACK.md) for V2EX, OSCHINA, Upwork, Fiverr, Hacker News, and Product Hunt copy.
