@@ -42,7 +42,7 @@ For engineering and operations tasks, guide the agent to maintain a task plan, e
 
 4. Research differentiation
 
-Make multi-agent research, Risk Agent veto, and local stock research report reading the visible differentiators. Financial workflows must stay research support only.
+Make multi-agent debate, general Risk Agent veto, reusable decision templates, and local stock research report reading the visible differentiators. Financial workflows must stay research support only.
 
 5. Packaging and handover
 

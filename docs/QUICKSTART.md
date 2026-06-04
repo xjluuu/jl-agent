@@ -88,6 +88,7 @@ List built-in templates:
 
 ```bash
 python xjlagent.py --research-templates
+python xjlagent.py --research-template decision
 python xjlagent.py --research-template stock
 ```
 

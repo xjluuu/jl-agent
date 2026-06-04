@@ -56,7 +56,7 @@ Sharper version for finance/enterprise audiences:
 - Works in restricted company environments
 - Role-based admin / maintainer / viewer permissions
 - Parallel research for market, policy, company, and document analysis
-- Risk Agent one-vote veto for stock, project, and compliance research
+- General Risk Agent one-vote veto for uncertain decisions, projects, compliance review, and financial research
 - Financial research workflows without becoming a trading bot
 - Local audit log
 - Dangerous command blocking
@@ -78,5 +78,5 @@ Keep the open-source core free and easy to evaluate. Prioritize:
 - Configurable storage paths for different organizations
 - Role-based permission examples
 - Knowledge-base ingestion examples
-- Finance/market research templates with Risk Agent veto rules
+- General decision and finance/market research templates with Risk Agent veto rules
 - Issue templates that collect reproducible environment details

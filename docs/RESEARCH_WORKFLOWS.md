@@ -13,6 +13,7 @@ python xjlagent.py --research-templates
 Show one template:
 
 ```bash
+python xjlagent.py --research-template decision
 python xjlagent.py --research-template stock
 python xjlagent.py --research-template company_due_diligence
 python xjlagent.py --research-template internal_project
@@ -22,8 +23,21 @@ Interactive mode:
 
 ```text
 /researchtemplates
+/researchtemplates decision
 /researchtemplates stock
 ```
+
+## General decision template
+
+Use the `decision` template when you have an unsure decision and want structured debate before acting. It separates:
+
+- the strongest case for proceeding
+- the strongest case for stopping or delaying
+- evidence, assumptions, conflicts, and missing data
+- safer alternatives
+- execution conditions, rollback, ownership, and verification
+
+The Risk Agent is the final gate. It can veto when key facts are unverifiable, compliance or permission boundaries are unclear, rollback is missing, downside risk is disproportionate, or no research track can provide enough evidence to proceed.
 
 ## Stock research template
 
@@ -35,7 +49,7 @@ Use the stock template when you want a repeatable research structure around:
 - catalyst and policy review
 - independent Risk Agent veto rules
 
-The Risk Agent is a research control. It can flag missing data, compliance concerns, overconfident claims, and red-line risks. It does not make investment recommendations or place trades.
+For stock work, the Risk Agent can flag missing data, compliance concerns, overconfident claims, and financial red-line risks. It does not make investment recommendations or place trades.
 
 ## Due diligence template
 
@@ -75,5 +89,4 @@ See [PERMISSION_MATRIX.md](PERMISSION_MATRIX.md) for role boundaries.
 
 ## Safety language
 
-Financial workflows are research support only. JL-Agent does not provide investment advice, does not place trades, and does not replace compliance review.
-
+Risk Agent veto is a general decision-control mechanism for unresolved risk. Financial workflows are research support only. JL-Agent does not provide investment advice, does not place trades, and does not replace compliance review.

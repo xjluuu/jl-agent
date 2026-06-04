@@ -115,7 +115,9 @@ def main() -> int:
         check("task report is persisted", Path(task_report.get("path", "")).exists() and "JL-Agent Task Report" in task_report.get("text", ""), str(task_report))
 
         template_names = agent.research_template_names()
-        check("research templates are available", {"stock", "company_due_diligence", "internal_project"}.issubset(set(template_names)), str(template_names))
+        check("research templates are available", {"decision", "stock", "company_due_diligence", "internal_project"}.issubset(set(template_names)), str(template_names))
+        decision_template = agent.format_research_templates("decision")
+        check("decision template is general-purpose", "Risk Agent veto" in decision_template and "Decision support" in decision_template, decision_template)
         stock_template = agent.format_research_templates("stock")
         check("stock research template includes risk rules", "Risk Rules" in stock_template and "investment advice" in stock_template, stock_template)
 

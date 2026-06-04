@@ -14,13 +14,13 @@ JL-Agent is not just a chat wrapper. It is a local work agent for teams that nee
 
 - **Role-based permissions**: admins can use development tools, maintainers can feed shared knowledge, and viewers can use safe analysis/chat workflows.
 - **Parallel research**: `parallel_research` can split a topic into multiple model-only research tracks and merge the results for multi-angle analysis.
-- **Risk-veto research**: `risk_veto_research` adds an independent Risk Agent. If a red flag is triggered, the result returns `veto: true`.
+- **General Risk Agent veto**: `risk_veto_research` runs a multi-agent debate for uncertain decisions, then gives an independent Risk Agent one-vote veto power. If a red flag is triggered, the result returns `veto: true`.
 - **Optional A-share daily research bridge**: `stock_market_report` reads a local `stock_research` daily report; admins can run or install the daily cron with `stock_market_run_daily` and `stock_market_install_cron`.
 - **Financial and market research workflows**: useful for organizing stock-market notes, company filings, news, risk factors, spreadsheets, and internal research material.
 - **Enterprise-friendly deployment**: one Python file, optional Windows EXE, external config, offline wheel workflow, configurable personal/shared storage.
 - **First-run handoff checks**: `--onboarding` and `--exe-check` make startup, config, permissions, and packaging readiness visible for non-developer users.
 - **Task delivery reports**: admins can generate a local task report with `--task-report` or `/taskreport` after engineering, data, or deployment work.
-- **Reusable research templates**: `--research-templates` includes stock, due-diligence, and internal-project workflows with explicit risk rules.
+- **Reusable research templates**: `--research-templates` includes general decision, stock, due-diligence, and internal-project workflows with explicit risk rules.
 - **Auditable tool use**: tool calls are logged, common secrets are redacted, file writes produce diffs, and dangerous commands are blocked.
 - **Local document intelligence**: `analyze_folder` and `study_files` summarize folders of PDFs, Office files, spreadsheets, logs, code, and notes without dumping everything into context.
 
@@ -41,13 +41,27 @@ Most agent frameworks assume a modern developer environment. JL-Agent is optimiz
 
 ## Example Workflows
 
+Uncertain decisions:
+
+```text
+Use risk-veto research when you are unsure whether to proceed.
+The sub-agents actively argue different sides:
+1. Case for proceeding
+2. Case for stopping or delaying
+3. Evidence, assumptions, and missing data
+4. Safer alternatives
+5. Execution conditions and rollback
+
+The Risk Agent then applies one-vote veto rules.
+```
+
 Stock and market research:
 
 ```text
 Use /stock to read the latest daily A-share multi-agent report.
 Admins can use /stock run to generate it manually, or /stock install to restore the workday cron job.
 
-Use risk-veto research to review:
+Use the stock template to review:
 1. Company fundamentals and recent filings
 2. News and policy catalysts
 3. Valuation and peer comparison
@@ -301,7 +315,7 @@ JL-Agent does not try to replace hosted platforms completely. A single offline E
 
 Instead, JL-Agent focuses on the part that is useful in restricted enterprise environments: local execution, configurable storage, EXE packaging when needed, auditability, and practical deployment.
 
-Financial and market research features are for organizing and analyzing information, not financial advice or trading automation. The Risk Agent veto is a research control, not an investment recommendation.
+The Risk Agent veto is a general decision-control mechanism for unresolved risk. Financial and market research features are for organizing and analyzing information, not financial advice, trading automation, or investment recommendations.
 
 ## Roadmap
 

@@ -90906,6 +90906,26 @@ def write_task_report(path=".", output_path=""):
     return {"path": output_path, "text": text}
 
 RESEARCH_WORKFLOW_TEMPLATES = {
+    "decision": {
+        "title": "Uncertain decision with Risk Agent veto",
+        "subject_hint": "decision, project, purchase, workflow, policy, research concern, or any unsure matter",
+        "questions": [
+            "Proceed case: strongest reasons to do it, expected benefits, and what would make it worthwhile",
+            "Stop or delay case: strongest reasons not to do it, failure modes, and downside scenarios",
+            "Evidence review: known facts, weak assumptions, conflicting signals, and missing data",
+            "Alternatives: safer, cheaper, reversible, or staged options",
+            "Execution conditions: owner, permissions, rollback, acceptance criteria, and verification steps",
+        ],
+        "risk_rules": [
+            "关键事实不可核验、证据冲突，或结论明显依赖单一弱来源",
+            "涉及权限、合规、隐私、安全、法律、客户影响或公司制度红线",
+            "影响不可逆、缺少回滚/备份/人工兜底，或失败后代价明显过高",
+            "成本、声誉、运营、客户、数据或财务风险与收益不成比例",
+            "关键利益相关方、负责人、验收标准或后续维护人不清楚",
+            "所有研究子Agent都无法给出足够证据支持继续推进",
+        ],
+        "disclaimer": "Decision support only. The Risk Agent is a veto gate for unresolved risk, not a replacement for accountable human review.",
+    },
     "stock": {
         "title": "Stock / A-share research",
         "subject_hint": "ticker, company name, or industry theme",
@@ -90968,9 +90988,19 @@ RESEARCH_WORKFLOW_TEMPLATES = {
 def research_template_names():
     return sorted(RESEARCH_WORKFLOW_TEMPLATES)
 
-def get_research_template(name="stock"):
-    key = str(name or "stock").strip().lower().replace("-", "_").replace(" ", "_")
-    aliases = {"a_share": "stock", "stock_research": "stock", "company": "company_due_diligence", "project": "internal_project"}
+def get_research_template(name="decision"):
+    key = str(name or "decision").strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "general": "decision",
+        "risk": "decision",
+        "veto": "decision",
+        "decision_review": "decision",
+        "uncertain": "decision",
+        "a_share": "stock",
+        "stock_research": "stock",
+        "company": "company_due_diligence",
+        "project": "internal_project",
+    }
     key = aliases.get(key, key)
     return key, RESEARCH_WORKFLOW_TEMPLATES.get(key)
 
@@ -90996,7 +91026,7 @@ def format_research_templates(name=""):
     for key in research_template_names():
         lines.append(f"- {key}: {RESEARCH_WORKFLOW_TEMPLATES[key]['title']}")
     lines.append("")
-    lines.append("Use `python xjlagent.py --research-template stock` or call `risk_veto_research` with the listed questions/risk_rules.")
+    lines.append("Use `python xjlagent.py --research-template decision` for a general Risk Agent veto workflow, or `stock` for A-share research.")
     return "\n".join(lines)
 
 # ====== 工具定义 ======
@@ -91073,9 +91103,9 @@ TOOLS = [
         "parameters": {"type": "object", "properties": {"keyword": {"type": "string"}}, "required": ["keyword"]}}},
     {"type": "function", "function": {"name": "delegate_task", "description": "派生子Agent执行独立任务",
         "parameters": {"type": "object", "properties": {"goal": {"type": "string"}, "context": {"type": "string"}}, "required": ["goal"]}}},
-    {"type": "function", "function": {"name": "parallel_research", "description": "并行研究多个问题，适合行业/股市/资料尽调等多角度分析；只返回研究结果，不执行本地命令",
+    {"type": "function", "function": {"name": "parallel_research", "description": "并行研究多个问题，适合行业/股市/资料尽调/不确定决策等多角度分析；只返回研究结果，不执行本地命令",
         "parameters": {"type": "object", "properties": {"questions": {"type": "array", "items": {"type": "string"}}, "context": {"type": "string"}, "max_workers": {"type": "integer"}, "timeout": {"type": "integer"}}, "required": ["questions"]}}},
-    {"type": "function", "function": {"name": "risk_veto_research", "description": "带Risk Agent一票否决的研究流程；适合股票/行业/项目尽调，风险Agent触发红线时返回veto=true",
+    {"type": "function", "function": {"name": "risk_veto_research", "description": "通用多Agent讨论 + Risk Agent一票否决流程；适合任何拿不准的决策、项目、采购、投研、合规、流程或资料尽调；Risk Agent触发红线时返回veto=true",
         "parameters": {"type": "object", "properties": {"subject": {"type": "string"}, "context": {"type": "string"}, "questions": {"type": "array", "items": {"type": "string"}}, "risk_rules": {"type": "array", "items": {"type": "string"}}, "max_workers": {"type": "integer"}, "timeout": {"type": "integer"}}, "required": ["subject"]}}},
     {"type": "function", "function": {"name": "stock_market_report", "description": "读取已配置的A股多Agent投研日报/latest反馈，包含Risk Agent风控闸门摘要",
         "parameters": {"type": "object", "properties": {"stock_research_dir": {"type": "string"}, "limit": {"type": "integer"}}, "required": []}}},
@@ -91891,8 +91921,10 @@ class Tools:
 
         def _run_one(idx, question):
             prompt = (
-                "你是一个并行研究子Agent。只研究分配给你的问题，给出结构化要点、证据缺口、"
-                "不确定性和下一步核验建议。涉及股票/金融时，只做研究分析，不给买卖指令，也不承诺收益。\n\n"
+                "你是一个并行研究子Agent。只研究分配给你的问题；如果这个问题代表某个立场，"
+                "要积极、充分地论证该立场，同时列出反证、证据缺口、不确定性和下一步核验建议。"
+                "你的输出会交给独立 Risk Agent 做最终否决审查。涉及股票/金融时，只做研究分析，"
+                "不给买卖指令，也不承诺收益。\n\n"
                 f"共享背景:\n{str(context or '')[:3000]}\n\n"
                 f"研究问题:\n{question}"
             )
@@ -91939,26 +91971,31 @@ class Tools:
             return {"error": "subject 不能为空"}
         if not isinstance(questions, list) or not questions:
             questions = [
-                f"{subject}: fundamentals, business quality, and recent operating trend",
-                f"{subject}: news, event catalysts, and policy/regulatory context",
-                f"{subject}: valuation, peer comparison, and market expectations",
-                f"{subject}: balance sheet, cash flow, liquidity, and accounting quality",
-                f"{subject}: key uncertainties and what must be verified before any decision",
+                f"{subject}: 正方Agent，积极论证为什么应该推进/采纳/执行，以及预期收益和成立条件",
+                f"{subject}: 反方Agent，积极论证为什么应该停止/推迟/拒绝，以及主要失败模式",
+                f"{subject}: 证据Agent，梳理已知事实、弱假设、冲突信息和必须补充的数据",
+                f"{subject}: 替代方案Agent，提出更安全、更便宜、更可回滚或分阶段推进的方案",
+                f"{subject}: 落地Agent，评估负责人、权限、资源、回滚、验收标准和验证步骤",
             ]
         if not isinstance(risk_rules, list) or not risk_rules:
             risk_rules = [
-                "重大财务造假、审计疑点、持续经营风险或现金流断裂迹象",
-                "高杠杆、短债压力、流动性紧张、债务违约或再融资困难",
-                "重大监管、诉讼、合规、制裁、退市或牌照风险",
-                "单一客户/供应商/产品依赖过高，且缺少可验证缓释因素",
-                "估值明显依赖乐观假设，缺少基本面或现金流支撑",
-                "关键数据缺失、来源不可靠，导致结论不可核验",
-                "市场情绪拥挤、极端波动、流动性不足或明显交易结构风险",
+                "关键事实不可核验、证据冲突，或结论明显依赖单一弱来源",
+                "涉及权限、合规、隐私、安全、法律、客户影响或公司制度红线",
+                "影响不可逆、缺少回滚/备份/人工兜底，或失败后代价明显过高",
+                "成本、声誉、运营、客户、数据或财务风险与收益不成比例",
+                "关键利益相关方、负责人、验收标准或后续维护人不清楚",
+                "所有研究子Agent都无法给出足够证据支持继续推进",
+                "涉及股票/金融时出现重大财务、审计、监管、流动性、退市、交易结构或合规风险",
             ]
 
         research = self.tool_parallel_research(
             questions=questions,
-            context=f"Subject: {subject}\n\n{context}",
+            context=(
+                f"Subject: {subject}\n"
+                "Mode: multi-agent debate for an uncertain decision. Sub-agents should actively argue their assigned angle, "
+                "then expose uncertainty and verification needs. Risk Agent has the final veto gate.\n\n"
+                f"{context}"
+            ),
             max_workers=max_workers,
             timeout=timeout,
         )
@@ -91970,11 +92007,12 @@ class Tools:
 研究对象：{subject}
 
 你的任务：
-1. 只评估风险，不做乐观叙事。
+1. 综合所有研究子Agent的讨论，但你只负责最终风险闸门，不负责安慰式乐观叙事。
 2. 如果任一红线成立，必须 veto=true。
-3. 如果关键数据不足以支撑判断，也可以 veto=true 或 needs_more_data。
-4. 涉及股票/金融时，不给买卖指令，不承诺收益。
-5. 严格输出 JSON，不要输出 Markdown。
+3. 如果关键数据不足以支撑继续推进，也可以 veto=true 或 needs_more_data。
+4. 如果没有触发否决，也必须列出继续推进的条件、验证动作和残余风险。
+5. 涉及股票/金融时，不给买卖指令，不承诺收益。
+6. 严格输出 JSON，不要输出 Markdown。
 
 风险红线：
 {rules_text}
@@ -92474,11 +92512,11 @@ class Agent:
             - 文件操作：读写文件、搜索文件、列目录
             - 工程工作流：project_scan 扫项目，worktree_status 看变更，verify_suggestions 给验证建议，task_plan 维护计划，preview_patch 预览diff，git_diff 查看diff，run_verification 运行验证，audit_log 查审计
             - 命令执行：跑终端命令、执行Python代码
-            - 搜索/研究：网页搜索、抓取网页、parallel_research 并行拆解多个研究问题，risk_veto_research 运行带风险一票否决的研究流程
+            - 搜索/研究：网页搜索、抓取网页、parallel_research 并行拆解多个研究问题，risk_veto_research 运行通用多Agent讨论+Risk Agent一票否决流程
             - 记忆：保存和读取持久化记忆
             - 技能：加载、创建、修改、删除、列出、全部加载
             - 会话搜索：search_all_sessions 搜历史、session_stats 统计
-            - 研究：parallel_research 适合行业、股市、政策、资料尽调等多角度分析；risk_veto_research 适合“股市分析/项目尽调/风险否决”这类请求，Risk Agent 触发红线时必须给出 veto=true；stock_market_report 读取每日A股多Agent投研日报，stock_market_run_daily/stock_market_install_cron 仅管理员用于运行和恢复定时任务；只做研究，不给买卖承诺
+            - 研究：parallel_research 适合行业、股市、政策、资料尽调、不确定决策等多角度分析；risk_veto_research 适合“我拿不准/帮我讨论/要不要做/项目尽调/股市研究/风险否决”这类请求，多个子Agent先从不同立场积极讨论，Risk Agent 最终拥有一票否决权，触发红线时必须给出 veto=true；stock_market_report 读取每日A股多Agent投研日报，stock_market_run_daily/stock_market_install_cron 仅管理员用于运行和恢复定时任务；金融场景只做研究，不给买卖承诺
             - 子Agent：delegate_task 派生子进程（管理员开发能力）
             - 定时任务：cron_create/cron_list/cron_remove（支持cron表达式、一天多次、独立output_dir反馈目录）
             - 进程管理：process_list/process_kill
@@ -99479,7 +99517,7 @@ if __name__ == "__main__":
         sys.exit(0)
     elif '--research-template' in sys.argv:
         idx = sys.argv.index('--research-template')
-        name = sys.argv[idx + 1] if idx + 1 < len(sys.argv) and not sys.argv[idx + 1].startswith("--") else "stock"
+        name = sys.argv[idx + 1] if idx + 1 < len(sys.argv) and not sys.argv[idx + 1].startswith("--") else "decision"
         text = format_research_templates(name)
         print(text)
         sys.exit(1 if text.startswith("未知研究模板") else 0)
