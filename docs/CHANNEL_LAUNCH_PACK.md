@@ -4,8 +4,7 @@ Use this order first:
 
 1. V2EX: get fast feedback from technical users.
 2. OSCHINA: create a Chinese open-source listing with long-tail search value.
-3. Upwork / Fiverr: convert the same positioning into paid setup services.
-4. Hacker News / Product Hunt: wait until the demo video and first user feedback are ready.
+3. Hacker News / Product Hunt: wait until the demo video and first user feedback are ready.
 
 ## V2EX
 
@@ -57,9 +56,7 @@ https://xjluuu.github.io/jl-agent/
 
 金融/股市相关功能只做研究辅助，不是投资建议，也不是自动交易系统。
 
-如果有团队想直接试部署，我也放了 paid setup request 入口，但这帖主要还是想先收集产品和工程建议。
-
-国内付费部署可以在确认范围后用支付宝或微信支付，公开 issue 里不要贴收款码、密钥或公司资料。
+项目按 MIT 协议免费开源。欢迎直接试用，也欢迎在 GitHub Issues 里反馈环境兼容、文档、打包或安全边界问题；公开 issue 里不要贴 API Key、公司资料、生产数据或内部网络细节。
 ```
 
 ## OSCHINA
@@ -115,83 +112,6 @@ JL-Agent 是一个面向受限企业环境的本地 AI Agent。它适合公司�
 - 可选 A 股投研日报桥接，普通用户可以只读 /stock 报告
 
 金融/股市能力只用于资料整理和研究辅助，不构成投资建议，也不是自动交易系统。
-```
-
-## Upwork / Fiverr
-
-Gig title:
-
-```text
-I will deploy a local AI agent for restricted company Windows environments
-```
-
-Short subtitle:
-
-```text
-Windows EXE packaging, internal model config, role permissions, audit logs, and local research workflows.
-```
-
-Overview:
-
-```text
-I help teams deploy JL-Agent, an open-source local AI agent designed for restricted company environments where Docker, public plugin marketplaces, full internet access, or Python on every user machine may not be available.
-
-This service is for practical deployment work: Windows EXE packaging, external configuration, internal model gateway setup, personal/shared storage layout, role-based Admin/Maintainer/Viewer permissions, audit log configuration, safe command controls, and optional stock or market research workflow setup.
-
-JL-Agent is open source. You can use it for free. This paid service is for teams that want a working deployment plan, checked configuration, and handover notes instead of figuring everything out alone.
-
-Financial and market workflows are research support only. I do not provide investment advice and I do not build automated trading systems.
-
-China-based clients can use Alipay or WeChat Pay after the scope is confirmed. International payment methods can be agreed separately.
-```
-
-Package 1:
-
-```text
-7-Day Trial - $0
-- Self-service evaluation checklist
-- Config path and self-check guidance
-- Basic fit check for Python mode, Windows EXE needs, model gateway, and storage constraints
-- No production rollout or custom work
-Delivery: immediate / best-effort guidance
-```
-
-Package 2:
-
-```text
-30-Day Express - $3.90
-- Python or Windows EXE startup support
-- API URL, model, key, personal path, and shared path setup guidance
-- Admin / Maintainer / Viewer permission map
-- Audit and safe-command setup checklist
-- Optional /stock report bridge validation
-- 30-day deployment Q&A window
-Delivery: 2-5 days for initial setup, then 30-day Q&A window
-```
-
-Package 3:
-
-```text
-Lifetime - $9.90
-- One-time onboarding and setup review
-- Lifetime access to paid deployment notes and packaged templates
-- Future public update guidance
-- Priority review for configuration questions within the stated product scope
-- Custom workflow automation quoted separately
-Delivery: 5-10 days for onboarding, lifetime access to stated materials
-```
-
-Buyer requirements:
-
-```text
-1. Target OS: Windows 10, Windows 11, macOS, or Linux?
-2. Do end users have Python, or do you need Windows EXE?
-3. Is the model endpoint public API or internal gateway?
-4. Do you need personal and shared storage paths?
-5. Do you need role-based permissions?
-6. Do you need stock/market research workflow support?
-7. Do you have restricted internet or offline dependency requirements?
-8. Do not send secrets, API keys, private company documents, or production data in the first message.
 ```
 
 ## Hacker News

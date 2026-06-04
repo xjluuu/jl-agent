@@ -11,11 +11,11 @@ myagent_config.json
 myagent_config*.json
 .env
 .env.*
+payment/
 *.key
 *.pem
 *.p12
 *.pfx
-payment/
 
 # JL-Agent runtime data
 .myagent/

@@ -6,7 +6,7 @@
 - [ ] Run `python xjlagent.py --release-check`.
 - [ ] Run `python xjlagent.py --run-verify`.
 - [ ] Confirm no `myagent_config.json`, `.myagent/`, business documents, logs, databases, `dist/`, `build/`, or `wheels/` are staged.
-- [ ] Replace `.github/FUNDING.yml` placeholders if you have funding accounts.
+- [ ] Confirm no payment, funding, or private support links are staged.
 - [ ] Add real screenshots or GIFs under `screenshots/`.
 - [ ] Decide the public repository name.
 - [ ] Create GitHub repository.

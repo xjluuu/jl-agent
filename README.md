@@ -149,9 +149,6 @@ JL_AGENT_STOCK_RESEARCH_DIR
 JL_AGENT_STOCK_RESEARCH_PYTHON
 JL_AGENT_STOCK_RESEARCH_CRON
 JL_AGENT_STOCK_RESEARCH_JOB
-JL_AGENT_WECHAT_QR
-JL_AGENT_WECHAT_NAME
-JL_AGENT_PAYMENT_NOTE
 ```
 
 Optional stock research bridge:
@@ -184,25 +181,17 @@ export JL_AGENT_HOME="$HOME/.local/share/jl-agent"
 
 See [config.example.json](config.example.json).
 
-For the optional local dashboard payment modal, put your WeChat payment QR image at `payment/wechat_qr.png`, or set `JL_AGENT_WECHAT_QR` to a local image path. The `payment/` folder is ignored by Git and should not be committed.
-
-The normal terminal UI uses a lightweight local license flow: 7-day trial, 30-day Express activation, or Lifetime activation. After manual payment, generate an activation code with `python xjlagent.py --make-activation express MACHINE_CODE` or `python xjlagent.py --make-activation lifetime MACHINE_CODE`.
+JL-Agent is free to run. The normal terminal UI no longer requires a trial, payment, or activation code.
 
 ## Website
 
 The project landing page lives in [site/](site/). The included GitHub Pages workflow publishes that folder when changes are pushed to `main`.
 
-## Commercial Support
+## Free And Open Source
 
-JL-Agent is open source and free to use. Paid plans are available for teams that want faster setup, packaged deployment assets, configuration handover, and support:
+JL-Agent is open source and free to use under the MIT license. You can run it, modify it, package it as a Windows EXE, and adapt it to your own internal environment.
 
-- **7-Day Trial - USD 0**: self-service evaluation checklist, config path guidance, and basic self-check flow.
-- **30-Day Express - USD 3.90**: Python or Windows EXE startup support, API/storage/permission setup, and a 30-day deployment Q&A window.
-- **Lifetime - USD 9.90**: one-time onboarding, setup review, lifetime access to paid deployment notes, and future public update guidance. Custom workflow work is quoted separately.
-
-Open a [paid setup request](https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml) or visit the [services section](https://xjluuu.github.io/jl-agent/#services).
-
-Payment is handled manually after scope confirmation. China-based clients can use Alipay or WeChat Pay; international payment methods can be agreed separately. Do not post payment QR codes or private account details in public issues. See [docs/PAYMENT.md](docs/PAYMENT.md).
+Use GitHub Issues for bugs, feature requests, documentation improvements, and reproducible packaging problems. Do not post API keys, company documents, private network details, customer data, or other confidential material in public issues.
 
 Financial workflows are research support only. JL-Agent does not provide investment advice, does not place trades, and does not replace your organization's compliance review.
 

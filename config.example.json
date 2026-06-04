@@ -17,10 +17,5 @@
     "python": "",
     "cron": "30 15 * * 1-5",
     "job_name": "A股投研日报"
-  },
-  "payment": {
-    "wechat_qr": "payment/wechat_qr.png",
-    "wechat_name": "WeChat Pay",
-    "note": "Confirm the plan, then scan with WeChat Pay."
   }
 }

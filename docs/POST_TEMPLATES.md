@@ -65,28 +65,19 @@ GitHub: https://github.com/xjluuu/jl-agent
 Website: https://xjluuu.github.io/jl-agent/
 ```
 
-## Service offer
+## Community follow-up
 
 ```text
-I also offer paid setup for teams that need help deploying JL-Agent internally:
-- 7-Day Trial: free self-service evaluation
-- 30-Day Express: $3.90 setup support and 30-day deployment Q&A
-- Lifetime: $9.90 one-time deployment pack and stated support scope
-- configure internal model gateway
-- run with Python on macOS/Windows/Linux
-- build Windows EXE
-- set up config paths
-- configure role-based permissions
-- add finance/market research templates and Risk Agent veto rules
-- run self-check
-- prepare deployment notes
+JL-Agent is free and open source under the MIT license.
 
-Payment:
-- China-based clients: Alipay or WeChat Pay after scope confirmation
-- International clients: agreed separately
-- Lifetime means the paid deployment pack and stated support scope, not unlimited custom development
+If you try it in a restricted company environment, useful feedback would be:
+- whether Python mode or Windows EXE mode worked
+- what config or path assumptions did not fit your environment
+- whether the Admin / Maintainer / Viewer permissions were understandable
+- whether the audit log and dangerous-command blocking covered your risk concerns
+- what examples would make internal deployment easier
 
-Contact: https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml
+GitHub Issues: https://github.com/xjluuu/jl-agent/issues
 ```
 
-See [CHANNEL_LAUNCH_PACK.md](CHANNEL_LAUNCH_PACK.md) for V2EX, OSCHINA, Upwork, Fiverr, Hacker News, and Product Hunt copy.
+See [CHANNEL_LAUNCH_PACK.md](CHANNEL_LAUNCH_PACK.md) for V2EX, OSCHINA, Hacker News, and Product Hunt copy.

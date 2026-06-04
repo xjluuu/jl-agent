@@ -69,14 +69,14 @@ Sharper version for finance/enterprise audiences:
 - 500 stars: demo and distribution work
 - 1,000 stars: start building plugin/code-index and research workflow roadmap
 
-## Monetization path
+## Community path
 
-Do not block the open-source core. Offer paid:
+Keep the open-source core free and easy to evaluate. Prioritize:
 
-- Enterprise setup
-- Internal model gateway integration
-- Windows packaging support
+- Clear Windows EXE packaging docs
+- Internal model gateway examples without real secrets
 - Configurable storage paths for different organizations
-- Knowledge-base migration
-- Workflow customization
+- Role-based permission examples
+- Knowledge-base ingestion examples
 - Finance/market research templates with Risk Agent veto rules
+- Issue templates that collect reproducible environment details

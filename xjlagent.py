@@ -89285,18 +89285,13 @@ def _default_runtime_config():
             "python": os.environ.get("JL_AGENT_STOCK_RESEARCH_PYTHON", ""),
             "cron": os.environ.get("JL_AGENT_STOCK_RESEARCH_CRON", "30 15 * * 1-5"),
             "job_name": os.environ.get("JL_AGENT_STOCK_RESEARCH_JOB", "A股投研日报")
-        },
-        "payment": {
-            "wechat_qr": os.environ.get("JL_AGENT_WECHAT_QR", "payment/wechat_qr.png"),
-            "wechat_name": os.environ.get("JL_AGENT_WECHAT_NAME", "WeChat Pay"),
-            "note": os.environ.get("JL_AGENT_PAYMENT_NOTE", "Confirm the plan, then scan with WeChat Pay.")
         }
     }
 
 def _merge_runtime_config(raw):
     cfg = _default_runtime_config()
     if isinstance(raw, dict):
-        for section in ("api", "agent", "memory", "stock_research", "payment"):
+        for section in ("api", "agent", "memory", "stock_research"):
             if isinstance(raw.get(section), dict):
                 cfg[section].update(raw.get(section) or {})
     # 环境变量优先，方便公司内网批量部署时用启动脚本覆盖。
@@ -89314,12 +89309,6 @@ def _merge_runtime_config(raw):
         cfg.setdefault("stock_research", {})["cron"] = os.environ["JL_AGENT_STOCK_RESEARCH_CRON"]
     if os.environ.get("JL_AGENT_STOCK_RESEARCH_JOB"):
         cfg.setdefault("stock_research", {})["job_name"] = os.environ["JL_AGENT_STOCK_RESEARCH_JOB"]
-    if os.environ.get("JL_AGENT_WECHAT_QR"):
-        cfg.setdefault("payment", {})["wechat_qr"] = os.environ["JL_AGENT_WECHAT_QR"]
-    if os.environ.get("JL_AGENT_WECHAT_NAME"):
-        cfg.setdefault("payment", {})["wechat_name"] = os.environ["JL_AGENT_WECHAT_NAME"]
-    if os.environ.get("JL_AGENT_PAYMENT_NOTE"):
-        cfg.setdefault("payment", {})["note"] = os.environ["JL_AGENT_PAYMENT_NOTE"]
     return cfg
 
 def _write_runtime_config(cfg):
@@ -89428,90 +89417,7 @@ def stock_research_settings():
         "job_name": str(raw.get("job_name", "A股投研日报") or "A股投研日报").strip()
     }
 
-PAYMENT_PLANS = [
-    {
-        "id": "trial",
-        "name": "7-Day Trial",
-        "price": "$0",
-        "label": "evaluation",
-        "description": "Self-service evaluation for checking local fit before paying.",
-    },
-    {
-        "id": "express",
-        "name": "30-Day Express",
-        "price": "$3.90",
-        "label": "30 days",
-        "description": "Fast setup help, config guidance, and a 30-day deployment Q&A window.",
-    },
-    {
-        "id": "lifetime",
-        "name": "Lifetime",
-        "price": "$9.90",
-        "label": "one-time",
-        "description": "Lifetime access to the paid deployment pack and stated support scope.",
-    },
-    {
-        "id": "custom",
-        "name": "Custom Enterprise",
-        "price": "Quote",
-        "label": "by scope",
-        "description": "Private workflow automation, enterprise rollout, and custom integrations.",
-    },
-]
-
-def payment_settings():
-    cfg = load_runtime_config(quiet=True)
-    raw = cfg.get("payment", {}) or {}
-    qr = str(raw.get("wechat_qr", "") or "").strip()
-    def resolve_qr_path(path):
-        if not path:
-            return ""
-        expanded = os.path.expandvars(os.path.expanduser(path))
-        if os.path.isabs(expanded):
-            return os.path.abspath(expanded)
-        base = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
-        bundled_base = getattr(sys, "_MEIPASS", "")
-        candidates = [
-            os.path.abspath(os.path.join(bundled_base, expanded)) if bundled_base else "",
-            os.path.abspath(os.path.join(base, expanded)),
-            os.path.abspath(os.path.join(os.getcwd(), expanded)),
-        ]
-        for candidate in candidates:
-            if candidate and os.path.exists(candidate):
-                return candidate
-        return next((candidate for candidate in candidates if candidate), "")
-    return {
-        "wechat_qr": resolve_qr_path(qr),
-        "wechat_name": str(raw.get("wechat_name", "WeChat Pay") or "WeChat Pay").strip(),
-        "note": str(raw.get("note", "Confirm the plan, then scan with WeChat Pay.") or "").strip(),
-    }
-
-def payment_public_info():
-    settings = payment_settings()
-    qr_path = settings.get("wechat_qr", "")
-    qr_available = bool(qr_path and os.path.exists(qr_path) and os.path.isfile(qr_path))
-    paid_plans = [plan for plan in PAYMENT_PLANS if plan.get("id") in ("express", "lifetime")]
-    return {
-        "plans": paid_plans,
-        "wechat_name": settings.get("wechat_name", "WeChat Pay"),
-        "note": settings.get("note", ""),
-        "qr_available": qr_available,
-        "qr_path": qr_path if qr_available else qr_path,
-    }
-
 LICENSE_FILE = os.path.join(PERSONAL_DATA_DIR, "license.json")
-
-def _license_secret():
-    return os.environ.get("JL_AGENT_LICENSE_SECRET", "jl-agent-public-demo-secret-v1")
-
-def _license_date_text(days):
-    return (datetime.date.today() + datetime.timedelta(days=int(days))).isoformat()
-
-def _parse_license_date(value):
-    try:
-        return datetime.date.fromisoformat(str(value or "")[:10])
-    except Exception:
-        return None
 
 def license_machine_code():
     import hashlib
@@ -89524,159 +89430,35 @@ def license_machine_code():
     ])
     return hashlib.sha256(seed.encode("utf-8", errors="replace")).hexdigest()[:16].upper()
 
-def _load_license_file():
-    if not os.path.exists(LICENSE_FILE):
-        return {}
-    try:
-        with open(LICENSE_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, dict) else {}
-    except Exception:
-        return {}
-
-def _write_license_file(data):
-    os.makedirs(os.path.dirname(LICENSE_FILE), exist_ok=True)
-    tmp = LICENSE_FILE + f".{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-        f.write("\n")
-    os.replace(tmp, LICENSE_FILE)
-
-def _activation_payload_b64(payload):
-    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
-
-def _activation_sign(payload_b64):
-    import hashlib, hmac
-    return hmac.new(_license_secret().encode("utf-8"), payload_b64.encode("ascii"), hashlib.sha256).hexdigest()[:24].upper()
-
 def make_activation_code(plan, machine_code, days=None):
-    plan = str(plan or "").strip().lower()
-    aliases = {
-        "30": "express",
-        "30day": "express",
-        "30-day": "express",
-        "express": "express",
-        "lifetime": "lifetime",
-        "permanent": "lifetime",
-        "forever": "lifetime",
-    }
-    plan = aliases.get(plan, plan)
-    if plan not in ("express", "lifetime"):
-        raise ValueError("plan must be express or lifetime")
-    machine = str(machine_code or "").strip().upper()
-    if not re.fullmatch(r"[A-F0-9]{16}", machine):
-        raise ValueError("machine code must be 16 hex characters")
-    if plan == "express":
-        expires = _license_date_text(int(days or 30))
-    else:
-        expires = ""
-    payload = {
-        "plan": plan,
-        "machine": machine,
-        "expires": expires,
-        "issued": datetime.date.today().isoformat(),
-    }
-    payload_b64 = _activation_payload_b64(payload)
-    return "JLA1." + payload_b64 + "." + _activation_sign(payload_b64)
+    return "JL-Agent is free and open source; activation codes are no longer required."
 
 def verify_activation_code(code):
-    text = str(code or "").strip()
-    parts = text.split(".")
-    if len(parts) != 3 or parts[0] != "JLA1":
-        return False, {}, "激活码格式不正确"
-    payload_b64, sig = parts[1], parts[2].upper()
-    expected = _activation_sign(payload_b64)
-    if sig != expected:
-        return False, {}, "激活码签名不匹配"
-    try:
-        padded = payload_b64 + "=" * (-len(payload_b64) % 4)
-        payload = json.loads(base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8"))
-    except Exception:
-        return False, {}, "激活码内容无法读取"
-    machine = license_machine_code()
-    if str(payload.get("machine", "")).upper() != machine:
-        return False, payload, f"激活码机器码不匹配；本机机器码是 {machine}"
-    expires = _parse_license_date(payload.get("expires", ""))
-    if expires and datetime.date.today() > expires:
-        return False, payload, f"激活码已过期: {expires.isoformat()}"
-    if payload.get("plan") not in ("express", "lifetime"):
-        return False, payload, "激活码套餐不正确"
-    return True, payload, "OK"
+    payload = {"plan": "free", "machine": license_machine_code(), "expires": ""}
+    return True, payload, "免费开源版无需激活"
 
 def license_status():
-    data = _load_license_file()
     machine = license_machine_code()
-    base = {
-        "active": False,
-        "plan": "",
+    return {
+        "active": True,
+        "plan": "free",
         "expires": "",
         "machine_code": machine,
         "license_file": LICENSE_FILE,
-        "trial_available": True,
-        "reason": "未激活",
+        "trial_available": False,
+        "reason": "免费开源版",
     }
-    if data.get("trial_used"):
-        base["trial_available"] = False
-    if data.get("type") == "trial":
-        base["trial_available"] = False
-        expires = _parse_license_date(data.get("expires"))
-        base["plan"] = "trial"
-        base["expires"] = expires.isoformat() if expires else ""
-        if expires and datetime.date.today() <= expires:
-            base["active"] = True
-            base["reason"] = "7 天试用中"
-        else:
-            base["reason"] = "7 天试用已过期"
-        return base
-    if data.get("type") == "activation" and data.get("code"):
-        ok, payload, reason = verify_activation_code(data.get("code"))
-        base["plan"] = str(payload.get("plan", "") or "")
-        base["expires"] = str(payload.get("expires", "") or "")
-        base["active"] = bool(ok)
-        base["reason"] = "已激活" if ok else reason
-        return base
-    return base
 
 def start_trial_license():
-    status = license_status()
-    if not status.get("trial_available"):
-        return False, status, "7 天试用已经使用过"
-    data = {
-        "type": "trial",
-        "plan": "trial",
-        "started": datetime.date.today().isoformat(),
-        "expires": _license_date_text(7),
-        "machine": license_machine_code(),
-        "trial_used": True,
-    }
-    _write_license_file(data)
-    return True, license_status(), "试用已开启"
+    return True, license_status(), "免费开源版无需试用"
 
 def activate_license(code):
-    ok, payload, reason = verify_activation_code(code)
-    if not ok:
-        return False, license_status(), reason
-    data = {
-        "type": "activation",
-        "code": str(code or "").strip(),
-        "plan": payload.get("plan", ""),
-        "expires": payload.get("expires", ""),
-        "activated": datetime.datetime.now().isoformat(),
-        "machine": license_machine_code(),
-        "trial_used": bool(_load_license_file().get("trial_used")),
-    }
-    _write_license_file(data)
-    return True, license_status(), "激活成功"
+    return True, license_status(), "免费开源版无需激活"
 
 def license_block_message():
-    status = license_status()
     return (
-        "JL-Agent 尚未激活，聊天和工具调用已暂停。\n"
-        f"状态: {status.get('reason')}\n"
-        f"机器码: {status.get('machine_code')}\n"
-        "点击 Dashboard 的 Plans 查看 7 天试用、30 天极速版或终身版。\n"
-        "付款后把机器码发给作者，收到激活码后在终端运行: xjlagent --activate <激活码>"
+        "JL-Agent 是免费开源版本，无需试用、付款或激活。\n"
+        "如果看到这条提示，请重新启动程序。"
     )
 
 def _script_command(extra_args=None):
@@ -89685,96 +89467,22 @@ def _script_command(extra_args=None):
         return [sys.executable] + extra_args
     return [sys.executable, os.path.abspath(__file__)] + extra_args
 
-def launch_payment_dashboard(plan="express"):
-    import socket, webbrowser
-    running = False
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        running = sock.connect_ex(("127.0.0.1", 18888)) == 0
-    finally:
-        sock.close()
-    if not running:
-        kwargs = {}
-        if IS_WINDOWS:
-            kwargs["creationflags"] = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
-        else:
-            kwargs["stdout"] = subprocess.DEVNULL
-            kwargs["stderr"] = subprocess.DEVNULL
-        try:
-            subprocess.Popen(_script_command(["--dashboard"]), **kwargs)
-            time.sleep(1.2)
-        except Exception as e:
-            print(f"[WARN] Dashboard 启动失败: {e}")
-    url = f"http://127.0.0.1:18888/?plan={urllib.parse.quote(str(plan or 'express'))}"
-    try:
-        webbrowser.open(url)
-    except Exception:
-        pass
-    print(f"付款页: {url}")
-    return url
-
 def print_license_status():
     status = license_status()
     lines = [
-        "JL-Agent 授权状态",
+        "JL-Agent 开源使用状态",
         "=" * 48,
         f"状态: {'ACTIVE' if status.get('active') else 'INACTIVE'}",
         f"原因: {status.get('reason')}",
-        f"套餐: {status.get('plan') or '-'}",
+        f"计划: {status.get('plan') or '-'}",
         f"到期: {status.get('expires') or '无'}",
         f"机器码: {status.get('machine_code')}",
-        f"授权文件: {status.get('license_file')}",
+        f"本地状态文件: {status.get('license_file')}",
     ]
     return "\n".join(lines)
 
 def ensure_license_interactive():
-    status = license_status()
-    if status.get("active"):
-        return True
-    while True:
-        status = license_status()
-        print("\n" + print_license_status())
-        print("\n请选择：")
-        if status.get("trial_available"):
-            print("  1) 开启 7 天试用，免费进入")
-        else:
-            print("  1) 7 天试用已使用")
-        print("  2) 30-Day Express - $3.90，打开微信收款码")
-        print("  3) Lifetime - $9.90，打开微信收款码")
-        print("  4) 输入激活码")
-        print("  0) 退出")
-        choice = input("选择: ").strip()
-        if choice == "1":
-            ok, new_status, msg = start_trial_license()
-            print(msg)
-            if ok and new_status.get("active"):
-                return True
-        elif choice == "2":
-            launch_payment_dashboard("express")
-            print("\n付款后，把上面的机器码发给作者。收到激活码后粘贴到这里。")
-            code = input("激活码（直接回车返回菜单）: ").strip()
-            if code:
-                ok, _, msg = activate_license(code)
-                print(msg)
-                if ok:
-                    return True
-        elif choice == "3":
-            launch_payment_dashboard("lifetime")
-            print("\n付款后，把上面的机器码发给作者。收到激活码后粘贴到这里。")
-            code = input("激活码（直接回车返回菜单）: ").strip()
-            if code:
-                ok, _, msg = activate_license(code)
-                print(msg)
-                if ok:
-                    return True
-        elif choice == "4":
-            code = input("激活码: ").strip()
-            ok, _, msg = activate_license(code)
-            print(msg)
-            if ok:
-                return True
-        elif choice == "0":
-            return False
+    return True
 
 def stock_research_dirs_from_cron_jobs():
     cron_files = [
@@ -90188,19 +89896,11 @@ def collect_self_check(check_api=False):
         f"127.0.0.1:{PORT if 'PORT' in globals() else 18888} " + ("可用" if _port_available("127.0.0.1", PORT if 'PORT' in globals() else 18888) else "可能已被占用"))
 
     try:
-        pay = payment_settings()
-        qr_path = pay.get("wechat_qr", "")
-        qr_ok = bool(qr_path and os.path.exists(qr_path) and os.path.isfile(qr_path))
-        add("微信收款码", "OK" if qr_ok else "WARN", qr_path if qr_path else "未配置；可设置 payment/wechat_qr.png 或 JL_AGENT_WECHAT_QR")
-    except Exception as e:
-        add("微信收款码", "WARN", e)
-
-    try:
         lic = license_status()
-        detail = f"{lic.get('reason')}; plan={lic.get('plan') or '-'}; expires={lic.get('expires') or '无'}; machine={lic.get('machine_code')}"
-        add("授权状态", "OK" if lic.get("active") else "WARN", detail)
+        detail = f"{lic.get('reason')}; plan={lic.get('plan') or '-'}; machine={lic.get('machine_code')}"
+        add("开源使用状态", "OK", detail)
     except Exception as e:
-        add("授权状态", "WARN", e)
+        add("开源使用状态", "WARN", e)
 
     if shutil.which("curl"):
         add("curl", "OK", shutil.which("curl"))
@@ -96370,146 +96070,6 @@ body[data-theme="dark"] {
   border-color: rgba(178, 242, 221, .34);
   background: rgba(178, 242, 221, .10);
 }
-.payment-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(2, 8, 13, .68);
-  backdrop-filter: blur(16px);
-}
-.payment-modal.open {
-  display: flex;
-}
-.payment-dialog {
-  width: min(980px, 94vw);
-  max-height: min(760px, 92vh);
-  overflow: auto;
-  border-radius: 24px;
-  border: 1px solid rgba(202, 239, 231, .12);
-  background: linear-gradient(180deg, rgba(11, 27, 34, .98), rgba(7, 17, 24, .98));
-  box-shadow: 0 28px 90px rgba(0,0,0,.42);
-  padding: 22px;
-  color: #edf7f4;
-}
-.payment-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  align-items: flex-start;
-  margin-bottom: 18px;
-}
-.payment-kicker {
-  color: #8fb4ae;
-  font-size: 11px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-.payment-head h2 {
-  margin: 6px 0 0;
-  font-size: 28px;
-  line-height: 1.05;
-  letter-spacing: 0;
-}
-.payment-close {
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  border: 1px solid rgba(202, 239, 231, .14);
-  background: rgba(255,255,255,.04);
-  color: #edf7f4;
-  cursor: pointer;
-}
-.payment-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) 320px;
-  gap: 16px;
-}
-.payment-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-.payment-plan {
-  border: 1px solid rgba(202, 239, 231, .10);
-  background: rgba(255,255,255,.035);
-  border-radius: 16px;
-  padding: 16px;
-  color: #edf7f4;
-  text-align: left;
-  cursor: pointer;
-}
-.payment-plan.active {
-  border-color: rgba(160, 245, 206, .52);
-  background: linear-gradient(180deg, rgba(109, 229, 181, .16), rgba(255,255,255,.04));
-}
-.payment-plan h3 {
-  margin: 0;
-  font-size: 16px;
-}
-.payment-price {
-  margin-top: 10px;
-  font-size: 30px;
-  font-weight: 780;
-  letter-spacing: 0;
-}
-.payment-price span {
-  color: #8fb4ae;
-  font-size: 12px;
-  font-weight: 520;
-}
-.payment-plan p {
-  margin: 10px 0 0;
-  color: #b8d6d0;
-  font-size: 12px;
-  line-height: 1.55;
-}
-.payment-qr-panel {
-  border: 1px solid rgba(202, 239, 231, .10);
-  background: rgba(255,255,255,.035);
-  border-radius: 18px;
-  padding: 16px;
-}
-.payment-selected {
-  font-size: 13px;
-  color: #b8d6d0;
-  line-height: 1.5;
-  min-height: 42px;
-}
-.payment-qr-frame {
-  margin-top: 14px;
-  min-height: 250px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  border: 1px dashed rgba(202, 239, 231, .18);
-  background: rgba(255,255,255,.04);
-  overflow: hidden;
-}
-.payment-qr-frame img {
-  width: min(240px, 100%);
-  height: auto;
-  display: none;
-  background: #fff;
-  padding: 8px;
-  border-radius: 10px;
-}
-.payment-missing {
-  padding: 18px;
-  color: #a9c7c1;
-  font-size: 12px;
-  line-height: 1.65;
-  text-align: center;
-}
-.payment-note {
-  margin-top: 12px;
-  color: #8fb4ae;
-  font-size: 11px;
-  line-height: 1.6;
-}
 .lab-meter {
   margin-top: 14px;
 }
@@ -97066,12 +96626,6 @@ body[data-theme="dark"] {
   .lab-topbar {
     display: none;
   }
-  .payment-body {
-    grid-template-columns: 1fr;
-  }
-  .payment-grid {
-    grid-template-columns: 1fr;
-  }
   .lab-hero-banner {
     min-height: 34px;
     padding: 6px 8px;
@@ -97274,10 +96828,10 @@ body[data-theme="dark"] {
     <div class="lab-plan-card">
       <div class="lab-plan-top">
         <div>
-          <div class="lab-plan-name">Plans</div>
-          <div class="lab-plan-sub">30-Day $3.90 / Lifetime $9.90</div>
+          <div class="lab-plan-name">Open Source</div>
+          <div class="lab-plan-sub">Free under the MIT license</div>
         </div>
-        <button class="lab-plan-btn" type="button" onclick="openPaymentModal('express')">Plans</button>
+        <button class="lab-plan-btn" type="button" onclick="window.open('https://github.com/xjluuu/jl-agent','_blank')">GitHub</button>
       </div>
       <div class="lab-meter">
         <div class="lab-meter-label"><span>在线用户</span><strong id="online-count">0</strong></div>
@@ -97315,7 +96869,7 @@ body[data-theme="dark"] {
       </div>
       <div class="lab-top-actions">
         <div id="model-brief">加载模型中...</div>
-        <button class="lab-icon-btn" type="button" onclick="openPaymentModal('express')" title="Plans">$</button>
+        <button class="lab-icon-btn" type="button" onclick="window.open('https://github.com/xjluuu/jl-agent','_blank')" title="GitHub">GH</button>
         <button class="lab-icon-btn" type="button">☼</button>
       </div>
     </header>
@@ -97333,7 +96887,7 @@ body[data-theme="dark"] {
         <div class="lab-hero-actions">
           <button class="hero-pill primary" type="button" onclick="focusComposer()">Create New Agent +</button>
           <button class="hero-pill" type="button" onclick="setPanel('skills')">Explore Templates</button>
-          <button class="hero-pill" type="button" onclick="openPaymentModal('express')">View Plans</button>
+          <button class="hero-pill" type="button" onclick="window.open('https://github.com/xjluuu/jl-agent#quick-start','_blank')">Quick Start</button>
         </div>
       </div>
       <div class="lab-system-card">
@@ -97523,28 +97077,6 @@ body[data-theme="dark"] {
         <div class="empty">选择一个用户后，这里会显示今天的对话。</div>
       </div>
     </aside>
-    <div class="payment-modal" id="payment-modal" aria-hidden="true">
-      <div class="payment-dialog" role="dialog" aria-modal="true" aria-labelledby="payment-title">
-        <div class="payment-head">
-          <div>
-            <div class="payment-kicker">JL-Agent Plans</div>
-            <h2 id="payment-title">Choose a plan</h2>
-          </div>
-          <button class="payment-close" type="button" onclick="closePaymentModal()">x</button>
-        </div>
-        <div class="payment-body">
-          <div class="payment-grid" id="payment-plan-list"></div>
-          <aside class="payment-qr-panel">
-            <div class="payment-selected" id="payment-selected">Select a paid plan to show the WeChat Pay QR code.</div>
-            <div class="payment-qr-frame">
-              <img id="payment-qr-img" alt="WeChat Pay QR code">
-              <div class="payment-missing" id="payment-qr-missing">Put your WeChat payment QR image at payment/wechat_qr.png, then restart or refresh this dashboard.</div>
-            </div>
-            <div class="payment-note" id="payment-note">Do not upload payment QR codes or private account details to public GitHub issues.</div>
-          </aside>
-        </div>
-      </div>
-    </div>
   </main>
 </div>
 
@@ -97560,111 +97092,16 @@ const state = {
   currentUser: '',
   isAdmin: false,
   selectedUser: null,
-  sessionId: null,
-  payment: null,
-  paymentPlan: 'express'
+  sessionId: null
 };
 
 const themes = ['system', 'light', 'dark'];
 const colorPool = ['#b56a34', '#417a82', '#96643a', '#6d7f3a', '#8d5d92', '#3b78aa', '#aa5c5c'];
-const fallbackPlans = [
-  { id: 'express', name: '30-Day Express', price: '$3.90', label: '30 days', description: 'Fast setup help, config guidance, and a 30-day deployment Q&A window.' },
-  { id: 'lifetime', name: 'Lifetime', price: '$9.90', label: 'one-time', description: 'Lifetime access to the paid deployment pack and stated support scope.' }
-];
 
 function esc(text) {
   const div = document.createElement('div');
   div.textContent = text || '';
   return div.innerHTML;
-}
-
-async function loadPayment() {
-  if (state.payment) return state.payment;
-  try {
-    const res = await fetch('/api/payment');
-    state.payment = await res.json();
-  } catch (err) {
-    state.payment = { plans: fallbackPlans, qr_available: false, note: 'Payment settings are not loaded.' };
-  }
-  if (!state.payment.plans || !state.payment.plans.length) {
-    state.payment.plans = fallbackPlans;
-  }
-  return state.payment;
-}
-
-function selectedPaymentPlan() {
-  const payment = state.payment || { plans: fallbackPlans };
-  return (payment.plans || fallbackPlans).find(plan => plan.id === state.paymentPlan) || fallbackPlans[0];
-}
-
-function renderPaymentPlans() {
-  const wrap = document.getElementById('payment-plan-list');
-  if (!wrap) return;
-  const payment = state.payment || { plans: fallbackPlans };
-  wrap.innerHTML = (payment.plans || fallbackPlans).map(plan => (
-    '<button type="button" class="payment-plan' + (plan.id === state.paymentPlan ? ' active' : '') + '" onclick="selectPaymentPlan(' + JSON.stringify(plan.id) + ')">' +
-      '<h3>' + esc(plan.name) + '</h3>' +
-      '<div class="payment-price">' + esc(plan.price) + ' <span>' + esc(plan.label || '') + '</span></div>' +
-      '<p>' + esc(plan.description || '') + '</p>' +
-    '</button>'
-  )).join('');
-}
-
-function updatePaymentQr() {
-  const plan = selectedPaymentPlan();
-  const payment = state.payment || {};
-  const selected = document.getElementById('payment-selected');
-  const img = document.getElementById('payment-qr-img');
-  const missing = document.getElementById('payment-qr-missing');
-  const note = document.getElementById('payment-note');
-  if (selected) selected.textContent = plan.name + ' - ' + plan.price + ' ' + (plan.label || '');
-  if (note) note.textContent = payment.note || 'Confirm the plan, then scan with WeChat Pay.';
-  if (payment.qr_available) {
-    if (missing) missing.style.display = 'none';
-    if (img) {
-      img.style.display = 'block';
-      img.src = '/api/payment_qr?plan=' + encodeURIComponent(plan.id) + '&v=' + Date.now();
-      img.onerror = () => {
-        img.style.display = 'none';
-        if (missing) {
-          missing.style.display = 'block';
-          missing.textContent = 'Payment QR failed to load. Check payment/wechat_qr.png or JL_AGENT_WECHAT_QR.';
-        }
-      };
-    }
-  } else {
-    if (img) img.style.display = 'none';
-    if (missing) {
-      missing.style.display = 'block';
-      missing.textContent = 'Put your WeChat payment QR image at payment/wechat_qr.png, or set JL_AGENT_WECHAT_QR to an image path, then refresh.';
-    }
-  }
-}
-
-function selectPaymentPlan(planId) {
-  state.paymentPlan = planId || 'express';
-  renderPaymentPlans();
-  updatePaymentQr();
-}
-
-async function openPaymentModal(planId) {
-  state.paymentPlan = planId || state.paymentPlan || 'express';
-  const modal = document.getElementById('payment-modal');
-  if (modal) {
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden', 'false');
-  }
-  await loadPayment();
-  renderPaymentPlans();
-  updatePaymentQr();
-}
-
-function closePaymentModal() {
-  const modal = document.getElementById('payment-modal');
-  if (modal) {
-    modal.classList.remove('open');
-    modal.setAttribute('aria-hidden', 'true');
-  }
 }
 
 function formatText(text) {
@@ -98451,16 +97888,6 @@ function bindEvents() {
     }
   });
 
-  const paymentModal = document.getElementById('payment-modal');
-  if (paymentModal) {
-    paymentModal.addEventListener('click', event => {
-      if (event.target === paymentModal) closePaymentModal();
-    });
-  }
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') closePaymentModal();
-  });
-
   document.getElementById('search-input').addEventListener('input', event => {
     renderSearchResults(event.target.value);
   });
@@ -98475,10 +97902,6 @@ async function boot() {
   bindEvents();
   resetConversation();
   await Promise.all([loadConfig(), loadUsers(), loadSkills(), loadTasks()]);
-  const startupPlan = new URLSearchParams(window.location.search).get('plan');
-  if (startupPlan) {
-    openPaymentModal(startupPlan);
-  }
   setInterval(loadUsers, 15000);
   setInterval(loadTasks, 30000);
 }
@@ -99061,8 +98484,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if p == "/api/users": self._json(get_users_data())
         elif p == "/api/skills": self._json({"skills": list_loaded_skills()})
         elif p == "/api/scheduled": self._json({"tasks": list_personal_scheduled()})
-        elif p == "/api/payment": self._json(payment_public_info())
-        elif p == "/api/payment_qr": self._payment_qr()
         elif p == "/api/config": self._json({"model": MODEL})
         else: self._html(HTML)
     def do_POST(self):
@@ -99172,44 +98593,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def _html(self, h, c=200):
         self.send_response(c); self.send_header("Content-Type","text/html; charset=utf-8"); self.end_headers()
         self.wfile.write(h.encode("utf-8"))
-    def _payment_qr(self):
-        info = payment_public_info()
-        path = info.get("qr_path", "")
-        if not info.get("qr_available") or not path:
-            self.send_response(404)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(b"payment qr not configured")
-            return
-        ext = os.path.splitext(path)[1].lower()
-        content_types = {
-            ".png": "image/png",
-            ".jpg": "image/jpeg",
-            ".jpeg": "image/jpeg",
-            ".gif": "image/gif",
-            ".webp": "image/webp",
-        }
-        if ext not in content_types:
-            self.send_response(415)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(b"unsupported payment qr image type")
-            return
-        try:
-            with open(path, "rb") as f:
-                data = f.read()
-            self.send_response(200)
-            self.send_header("Content-Type", content_types[ext])
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("Content-Length", str(len(data)))
-            self.end_headers()
-            self.wfile.write(data)
-        except Exception:
-            self.send_response(404)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(b"payment qr not readable")
-
 def get_users_data():
     update_heartbeat()
     now = time.time(); online = {}
@@ -99340,7 +98723,6 @@ def _run_embedded_dashboard():
         'format_verification_results': format_verification_results,
         'load_recent_audit': load_recent_audit,
         'format_audit_log': format_audit_log,
-        'payment_public_info': payment_public_info,
         'license_status': license_status,
         'license_block_message': license_block_message,
     }
@@ -99599,22 +98981,11 @@ if __name__ == "__main__":
         print(print_license_status())
         sys.exit(0 if license_status().get("active") else 1)
     elif '--activate' in sys.argv:
-        idx = sys.argv.index('--activate')
-        code = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else input("激活码: ").strip()
-        ok, _, msg = activate_license(code)
-        print(msg)
-        sys.exit(0 if ok else 1)
+        print("免费开源版无需激活，直接运行即可。")
+        sys.exit(0)
     elif '--make-activation' in sys.argv:
-        idx = sys.argv.index('--make-activation')
-        try:
-            plan = sys.argv[idx + 1]
-            machine = sys.argv[idx + 2]
-            days = int(sys.argv[idx + 3]) if idx + 3 < len(sys.argv) and not sys.argv[idx + 3].startswith("--") else None
-            print(make_activation_code(plan, machine, days=days))
-            sys.exit(0)
-        except Exception as e:
-            print(f"用法: --make-activation express|lifetime <machine_code> [days]\n错误: {e}")
-            sys.exit(1)
+        print(make_activation_code(None, None))
+        sys.exit(0)
     elif '--release-check' in sys.argv or '--github-check' in sys.argv:
         sys.exit(run_release_check())
     elif '--project-scan' in sys.argv:

@@ -51,46 +51,6 @@ Open:
 http://127.0.0.1:18888
 ```
 
-## Optional payment QR
+## Free use
 
-If you distribute a paid deployment build, save your WeChat payment QR image as:
-
-```text
-payment/wechat_qr.png
-```
-
-Then start the dashboard and click `Plans`. The modal shows:
-
-- 7-Day Trial: free
-- 30-Day Express: USD 3.90
-- Lifetime: USD 9.90
-- Custom Enterprise: quote by scope
-
-Do not commit the `payment/` folder to a public repository.
-
-## Trial and activation
-
-When launching the normal terminal UI, JL-Agent checks the local license first:
-
-- `7-Day Trial`: writes a local 7-day trial license and enters the UI.
-- `30-Day Express`: opens the payment page, then waits for an activation code.
-- `Lifetime`: opens the payment page, then waits for an activation code.
-
-Generate the machine code:
-
-```bash
-python xjlagent.py --machine-code
-```
-
-Generate an activation code after payment:
-
-```bash
-python xjlagent.py --make-activation express MACHINE_CODE
-python xjlagent.py --make-activation lifetime MACHINE_CODE
-```
-
-Activate:
-
-```bash
-python xjlagent.py --activate ACTIVATION_CODE
-```
+JL-Agent is free and open source under the MIT license. No trial, payment, or activation code is required.

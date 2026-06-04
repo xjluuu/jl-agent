@@ -18,6 +18,8 @@ python xjlagent.py --release-check
 
 Include the command output with secrets removed.
 
-## Commercial Support
+## Community Support Boundary
 
-The project is open source. If you need help deploying JL-Agent inside a restricted enterprise Windows environment, maintainers may offer paid setup, packaging, or customization services depending on availability.
+JL-Agent is free and open source. This repository does not offer a paid setup program, payment workflow, or license activation support.
+
+For restricted enterprise deployments, keep company secrets and internal documents out of public issues. Share only the environment shape, error messages with secrets removed, and reproducible steps.

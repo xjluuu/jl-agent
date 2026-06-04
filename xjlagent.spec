@@ -3,9 +3,6 @@
 from pathlib import Path
 
 datas = []
-payment_qr = Path('payment/wechat_qr.png')
-if payment_qr.exists():
-    datas.append((str(payment_qr), 'payment'))
 
 a = Analysis(
     ['xjlagent.py'],

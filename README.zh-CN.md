@@ -90,9 +90,6 @@ JL-Agent 不要求固定盘符，也不假设必须有某个共享盘。默认�
 - `JL_AGENT_STOCK_RESEARCH_PYTHON`：可选，管理员机器运行日报脚本时使用的 Python
 - `JL_AGENT_STOCK_RESEARCH_CRON`：可选，默认 `30 15 * * 1-5`
 - `JL_AGENT_STOCK_RESEARCH_JOB`：可选，默认 `A股投研日报`
-- `JL_AGENT_WECHAT_QR`：可选，本地 Dashboard 里显示的微信收款码图片路径
-- `JL_AGENT_WECHAT_NAME`：可选，收款名称
-- `JL_AGENT_PAYMENT_NOTE`：可选，付款提示文字
 
 可选 A 股投研桥接配置：
 
@@ -109,9 +106,7 @@ JL-Agent 不要求固定盘符，也不假设必须有某个共享盘。默认�
 
 可选 A 股投研桥接的详细说明见 [docs/STOCK_RESEARCH.md](docs/STOCK_RESEARCH.md)。
 
-本地 Dashboard 的付款弹窗会读取 `payment/wechat_qr.png`，也可以用 `JL_AGENT_WECHAT_QR` 指向其他本地图片。`payment/` 目录已被 Git 忽略，不要提交真实收款码。
-
-普通终端 UI 启动前会走轻量本地授权流程：7 天试用、30 天极速版激活、终身版激活。人工确认付款后，用 `python xjlagent.py --make-activation express MACHINE_CODE` 或 `python xjlagent.py --make-activation lifetime MACHINE_CODE` 生成激活码。
+JL-Agent 可以免费运行。普通终端 UI 不再要求试用、付款或激活码。
 
 Windows 示例：
 
@@ -148,17 +143,11 @@ prepare_offline_wheels.bat
 
 项目介绍网站源码在 [site/](site/)。仓库内置 GitHub Pages workflow，推送到 `main` 后可以自动发布这个目录。
 
-## 付费部署服务
+## 免费开源
 
-JL-Agent 是开源项目，可以免费使用。付费计划面向希望更快跑通、获得部署包、配置交接和支持的团队：
+JL-Agent 使用 MIT 许可证开源，可以免费使用、修改、打包成 Windows EXE，并按你自己的内部环境调整。
 
-- **7-Day Trial - 0 美元**：自助试用清单、配置路径说明和基础自检流程。
-- **30-Day Express - 3.90 美元**：Python 或 Windows EXE 启动支持、API/存储/权限配置，以及 30 天部署答疑窗口。
-- **Lifetime - 9.90 美元**：一次性 onboarding、配置复核、付费部署说明的终身访问和未来公开版本更新指引。定制工作流单独报价。
-
-可以提交 [paid setup request](https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml)，也可以查看官网的 [services section](https://xjluuu.github.io/jl-agent/#services)。
-
-付款在确认服务范围后人工处理。国内客户可使用支付宝或微信支付，海外支付方式单独约定；不要在公开 issue 里贴收款码、私人账户信息或公司资料。见 [docs/PAYMENT.md](docs/PAYMENT.md)。
+Bug、功能建议、文档改进和可复现的打包问题可以走 GitHub Issues。不要在公开 issue 里贴 API Key、公司文档、内网细节、客户数据或其他保密资料。
 
 金融/股市相关能力只用于研究辅助。JL-Agent 不提供投资建议，不执行交易，也不能替代公司合规审查。
 
