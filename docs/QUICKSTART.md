@@ -33,13 +33,21 @@ Warnings are acceptable when they describe optional capabilities, such as missin
 
 The self-check output shows the actual runtime config and data paths for the current machine.
 
-## 4. Start interactive mode
+## 4. Run offline smoke test
+
+```bash
+python tests/offline_smoke.py
+```
+
+This does not call a model API. It checks startup, free/open-source status, role permissions, release-check, and verification suggestions.
+
+## 5. Start interactive mode
 
 ```bash
 python xjlagent.py
 ```
 
-## 5. Start dashboard
+## 6. Start dashboard
 
 ```bash
 python xjlagent.py --dashboard

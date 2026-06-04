@@ -79,6 +79,14 @@ python xjlagent.py --run-verify
 python xjlagent.py --dashboard
 ```
 
+离线成熟度检查：
+
+```bash
+python tests/offline_smoke.py
+```
+
+这个 smoke test 不调用模型 API，用于检查免费开源状态、角色权限、自检、发布检查和本地验证建议。
+
 ## 路径配置
 
 JL-Agent 不要求固定盘符，也不假设必须有某个共享盘。默认会使用当前用户的数据目录，并可以通过下面环境变量覆盖：
@@ -150,6 +158,16 @@ JL-Agent 使用 MIT 许可证开源，可以免费使用、修改、打包成 Wi
 Bug、功能建议、文档改进和可复现的打包问题可以走 GitHub Issues。不要在公开 issue 里贴 API Key、公司文档、内网细节、客户数据或其他保密资料。
 
 金融/股市相关能力只用于研究辅助。JL-Agent 不提供投资建议，不执行交易，也不能替代公司合规审查。
+
+## 智能体成熟方向
+
+JL-Agent 会继续按“受限企业环境里的本地工作 Agent”发展，而不是做云端平台的简单平替。近期重点是可靠性、权限安全、任务执行闭环、多 Agent 研究，以及 Windows EXE 交付质量。
+
+相关文档：
+
+- [Agent Maturity Plan](docs/AGENT_MATURITY_PLAN.md)
+- [Permission Matrix](docs/PERMISSION_MATRIX.md)
+- [Safety Model](docs/SAFETY_MODEL.md)
 
 ## 安全说明
 

@@ -90,6 +90,14 @@ python xjlagent.py --audit-log
 python xjlagent.py --dashboard
 ```
 
+Offline maturity check:
+
+```bash
+python tests/offline_smoke.py
+```
+
+This smoke test does not call a model API. It checks the free/open-source state, role permissions, self-check, release-check, and local verification suggestions.
+
 ## Platform Support
 
 Python mode works on:
@@ -194,6 +202,16 @@ JL-Agent is open source and free to use under the MIT license. You can run it, m
 Use GitHub Issues for bugs, feature requests, documentation improvements, and reproducible packaging problems. Do not post API keys, company documents, private network details, customer data, or other confidential material in public issues.
 
 Financial workflows are research support only. JL-Agent does not provide investment advice, does not place trades, and does not replace your organization's compliance review.
+
+## Agent Maturity Direction
+
+JL-Agent is being developed as a local-first work agent for restricted enterprise environments, not as a hosted platform clone. The near-term focus is reliability, permission safety, task execution loops, multi-agent research, and Windows EXE handover quality.
+
+See:
+
+- [Agent Maturity Plan](docs/AGENT_MATURITY_PLAN.md)
+- [Permission Matrix](docs/PERMISSION_MATRIX.md)
+- [Safety Model](docs/SAFETY_MODEL.md)
 
 ## Engineering Workflow
 

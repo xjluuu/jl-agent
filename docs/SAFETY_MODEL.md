@@ -21,6 +21,8 @@ JL-Agent is designed for shared use, not just single-user tinkering:
 
 Both the terminal UI and dashboard route tool calls through the same permission checks.
 
+See [PERMISSION_MATRIX.md](PERMISSION_MATRIX.md) for the tool-group matrix and enforcement points.
+
 ## Dangerous command blocking
 
 Examples of blocked operations:

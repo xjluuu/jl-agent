@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+"""Offline smoke tests for JL-Agent.
+
+These checks intentionally avoid model API calls, internet access, and pytest.
+They are meant to run on restricted machines before packaging or publishing.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+import tempfile
+from pathlib import Path
+
+
+def _import_agent(repo_root: Path):
+    temp_root = tempfile.TemporaryDirectory(prefix="jl-agent-smoke-")
+    os.environ["JL_AGENT_HOME"] = temp_root.name
+    os.environ.setdefault("JL_AGENT_API_KEY", "")
+    os.environ.setdefault("JL_AGENT_MODEL", "deepseek-v4-pro")
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+    import xjlagent  # noqa: WPS433 - smoke test imports the local runtime
+
+    return xjlagent, temp_root
+
+
+def main() -> int:
+    repo_root = Path(__file__).resolve().parents[1]
+    agent, temp_root = _import_agent(repo_root)
+    checks: list[tuple[str, bool, str]] = []
+
+    def check(name: str, ok: bool, detail: str = "") -> None:
+        checks.append((name, bool(ok), detail))
+
+    try:
+        status = agent.license_status()
+        check("free license is active", status.get("active") is True and status.get("plan") == "free", str(status))
+
+        activation_message = agent.make_activation_code(None, None)
+        check("activation generator is disabled", "no longer required" in activation_message, activation_message)
+        ok, payload, reason = agent.verify_activation_code("anything")
+        check("legacy activation verifier is harmless", ok and payload.get("plan") == "free", reason)
+
+        users = {
+            "admins": ["admin@host"],
+            "learn_whitelist": ["maintainer@host"],
+            "users": {
+                "admin@host": {},
+                "maintainer@host": {},
+                "viewer@host": {},
+            },
+        }
+        admin_tools = agent.get_allowed_tool_names("admin@host", users)
+        maintainer_tools = agent.get_allowed_tool_names("maintainer@host", users)
+        viewer_tools = agent.get_allowed_tool_names("viewer@host", users)
+
+        admin_required = {"execute_command", "write_file", "run_verification", "stock_market_run_daily"}
+        dev_blocked = {"execute_command", "write_file", "patch_file", "run_verification", "stock_market_run_daily"}
+        research_allowed = {"parallel_research", "risk_veto_research", "stock_market_report"}
+
+        check("admin keeps development tools", admin_required.issubset(admin_tools), str(sorted(admin_required - admin_tools)))
+        check("maintainer cannot use dev tools", dev_blocked.isdisjoint(maintainer_tools), str(sorted(dev_blocked & maintainer_tools)))
+        check("viewer cannot use dev tools", dev_blocked.isdisjoint(viewer_tools), str(sorted(dev_blocked & viewer_tools)))
+        check("maintainer can ingest knowledge", "learn" in maintainer_tools, "")
+        check("viewer cannot ingest knowledge", "learn" not in viewer_tools, "")
+        check("model-only research is broadly available", research_allowed.issubset(viewer_tools), str(sorted(research_allowed - viewer_tools)))
+
+        check("development classifier catches code work", agent.looks_like_development_request("帮我写一个 Python 脚本修 bug"), "")
+        check("development classifier allows research", not agent.looks_like_development_request("总结这些会议纪要里的风险"), "")
+
+        release_checks, release_code = agent.collect_release_check()
+        check("release check has no failures", release_code == 0, str(release_checks))
+
+        self_checks, self_code = agent.collect_self_check(check_api=False)
+        check("self check has no failures", self_code == 0, str(self_checks))
+
+        scan = agent.collect_project_scan(str(repo_root), max_files=2500)
+        verify_commands = scan.get("verify_commands") or []
+        check("offline smoke appears in verify suggestions", any("tests/offline_smoke.py" in c for c in verify_commands), str(verify_commands))
+    finally:
+        temp_root.cleanup()
+
+    failed = [(name, detail) for name, ok, detail in checks if not ok]
+    for name, ok, detail in checks:
+        mark = "[OK]" if ok else "[X]"
+        suffix = f" - {detail}" if detail else ""
+        print(f"{mark} {name}{suffix}")
+
+    if failed:
+        print(f"\nFAILED: {len(failed)} check(s)")
+        return 1
+    print("\nOffline smoke passed.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

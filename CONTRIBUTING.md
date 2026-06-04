@@ -16,6 +16,7 @@ Thanks for considering a contribution to JL-Agent.
 python -m pip install -r requirements.txt
 python xjlagent.py --self-check
 python xjlagent.py --release-check
+python tests/offline_smoke.py
 ```
 
 Optional build dependencies:
@@ -38,6 +39,7 @@ Run:
 python -m py_compile xjlagent.py
 python xjlagent.py --self-check
 python xjlagent.py --release-check
+python tests/offline_smoke.py
 ```
 
 If your change touches packaging, also test on Windows:

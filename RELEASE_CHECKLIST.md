@@ -4,6 +4,7 @@
 
 - [ ] Review `xjlagent.py` for personal/company-specific strings.
 - [ ] Run `python xjlagent.py --release-check`.
+- [ ] Run `python tests/offline_smoke.py`.
 - [ ] Run `python xjlagent.py --run-verify`.
 - [ ] Confirm no `myagent_config.json`, `.myagent/`, business documents, logs, databases, `dist/`, `build/`, or `wheels/` are staged.
 - [ ] Confirm no payment, funding, or private support links are staged.

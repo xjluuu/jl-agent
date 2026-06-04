@@ -90317,6 +90317,8 @@ def suggest_verify_commands(root, markers=None, languages=None):
     if "xjlagent.py" in markers:
         commands.append("python xjlagent.py --self-check")
         commands.append("python xjlagent.py --release-check")
+        if os.path.exists(os.path.join(root, "tests", "offline_smoke.py")):
+            commands.append("python tests/offline_smoke.py")
     if "pyproject.toml" in markers:
         commands.append("python -m py_compile <changed .py files>")
         commands.append("python -m pytest")
