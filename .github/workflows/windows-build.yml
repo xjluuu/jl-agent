@@ -24,6 +24,14 @@ jobs:
         shell: cmd
         run: build_xjlagent_exe.bat --no-pause
 
+      - name: Run EXE handoff checks
+        shell: cmd
+        run: |
+          dist\xjlagent.exe --self-check
+          dist\xjlagent.exe --permission-check
+          dist\xjlagent.exe --exe-check
+          dist\xjlagent.exe --onboarding
+
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:

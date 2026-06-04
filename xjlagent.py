@@ -88743,6 +88743,10 @@ try:
         ("/selfcheck", "运行环境自检"),
         ("/releasecheck", "运行GitHub发布自检"),
         ("/permissioncheck", "检查权限矩阵"),
+        ("/onboarding", "查看首次启动/交付状态"),
+        ("/execheck", "检查EXE交付准备"),
+        ("/taskreport", "生成任务交付报告"),
+        ("/researchtemplates", "查看研究模板"),
         ("/project", "扫描工程项目"),
         ("/changes", "查看工作树变更"),
         ("/verify", "给出验证命令建议"),
@@ -89562,6 +89566,105 @@ def print_license_status():
         f"机器码: {status.get('machine_code')}",
         f"本地状态文件: {status.get('license_file')}",
     ]
+    return "\n".join(lines)
+
+def _status_counts(checks):
+    counts = {"OK": 0, "WARN": 0, "FAIL": 0, "SKIP": 0}
+    for item in checks or []:
+        status = item.get("status", "")
+        counts[status] = counts.get(status, 0) + 1
+    return counts
+
+def collect_onboarding_status():
+    cfg = load_runtime_config(quiet=True)
+    api = (cfg.get("api") or {})
+    self_checks, self_code = collect_self_check(check_api=False)
+    permission_checks, permission_code = collect_permission_check()
+    role = get_user_role()
+    return {
+        "version": version_text(),
+        "mode": "EXE" if getattr(sys, "frozen", False) else "Python",
+        "platform": platform.platform(),
+        "user": get_user_identity(),
+        "role": role,
+        "config": CONFIG_FILE,
+        "personal_data": PERSONAL_DATA_DIR,
+        "share_data": SHARE_DATA_DIR,
+        "api_url": api.get("url", ""),
+        "api_model": api.get("model", ""),
+        "api_key_configured": bool(api.get("key")),
+        "self_check_code": self_code,
+        "self_check_counts": _status_counts(self_checks),
+        "permission_code": permission_code,
+        "permission_counts": _status_counts(permission_checks),
+    }
+
+def format_onboarding_status(data):
+    role_note = {
+        "admin": "管理员：可以配置、验证、打包、维护权限和运行工程工具。",
+        "maintainer": "维护员：可以做安全问答、资料分析和授权的知识库投喂，不能执行开发/命令类工具。",
+        "viewer": "普通用户：可以做安全问答、搜索、资料分析和模型研究，不能改代码、执行命令或导出知识库。",
+    }.get(data.get("role"), "未知角色")
+    self_counts = data.get("self_check_counts") or {}
+    perm_counts = data.get("permission_counts") or {}
+    api_key_state = "已配置" if data.get("api_key_configured") else "空（内网无鉴权时可接受）"
+    lines = [
+        "JL-Agent 首次启动/交付状态",
+        "=" * 60,
+        f"版本: {data.get('version')}",
+        f"运行模式: {data.get('mode')} / {data.get('platform')}",
+        f"当前用户: {data.get('user')}",
+        f"当前角色: {data.get('role')} - {role_note}",
+        f"配置文件: {data.get('config')}",
+        f"个人数据目录: {data.get('personal_data')}",
+        f"共享数据目录: {data.get('share_data')}",
+        f"模型配置: url={data.get('api_url') or '-'}, model={data.get('api_model') or '-'}, key={api_key_state}",
+        f"环境自检: code={data.get('self_check_code')} OK={self_counts.get('OK', 0)} WARN={self_counts.get('WARN', 0)} FAIL={self_counts.get('FAIL', 0)} SKIP={self_counts.get('SKIP', 0)}",
+        f"权限检查: code={data.get('permission_code')} OK={perm_counts.get('OK', 0)} WARN={perm_counts.get('WARN', 0)} FAIL={perm_counts.get('FAIL', 0)}",
+        "",
+        "下一步:",
+        "1. 如果 API URL/model/key 不对，编辑上面的配置文件后运行 --reload_config 或重启。",
+        "2. 管理员先运行 --permission-check 和 --run-verify，再交给普通用户。",
+        "3. 普通用户打开后优先使用资料分析、研究、/stock 报告和安全问答。",
+        "4. Windows EXE 交付前运行 dist\\xjlagent.exe --exe-check。",
+    ]
+    return "\n".join(lines)
+
+def collect_exe_readiness():
+    checks = []
+    def add(name, status, detail=""):
+        checks.append({"name": name, "status": status, "detail": str(detail or "")})
+
+    frozen = bool(getattr(sys, "frozen", False))
+    add("运行模式", "OK", "EXE" if frozen else "Python source")
+    add("当前系统", "OK", platform.platform())
+    add("Windows打包环境", "OK" if IS_WINDOWS else "WARN", "当前在 Windows，可打包/验证 EXE" if IS_WINDOWS else "当前不是 Windows；真实 EXE 打包和运行必须在 Windows 10/11 或 GitHub Actions 上验证")
+    add("配置文件外置", "OK", CONFIG_FILE)
+    add("个人数据目录", "OK" if os.path.isdir(PERSONAL_DATA_DIR) else "FAIL", PERSONAL_DATA_DIR)
+    add("共享数据目录", "OK" if os.path.isdir(SHARE_DATA_DIR) else "FAIL", SHARE_DATA_DIR)
+    if frozen:
+        add("EXE路径", "OK" if os.path.exists(sys.executable) else "FAIL", sys.executable)
+    else:
+        root = _project_root()
+        add("PyInstaller配置", "OK" if os.path.exists(os.path.join(root, "xjlagent.spec")) else "FAIL", os.path.join(root, "xjlagent.spec"))
+        add("Windows构建脚本", "OK" if os.path.exists(os.path.join(root, "build_xjlagent_exe.bat")) else "FAIL", os.path.join(root, "build_xjlagent_exe.bat"))
+        add("离线测试脚本", "OK" if os.path.exists(os.path.join(root, "tests", "offline_smoke.py")) else "WARN", os.path.join(root, "tests", "offline_smoke.py"))
+    self_checks, self_code = collect_self_check(check_api=False)
+    self_counts = _status_counts(self_checks)
+    add("运行环境自检", "FAIL" if self_code else "OK", f"OK={self_counts.get('OK', 0)} WARN={self_counts.get('WARN', 0)} FAIL={self_counts.get('FAIL', 0)}")
+    permission_checks, permission_code = collect_permission_check()
+    add("权限矩阵", "FAIL" if permission_code else "OK", f"{len(permission_checks)} 项")
+    has_fail = any(i["status"] == "FAIL" for i in checks)
+    return checks, 1 if has_fail else 0
+
+def format_exe_readiness(checks):
+    width = max([len(i["name"]) for i in checks] + [8])
+    lines = ["JL-Agent EXE 交付检查", "=" * 60]
+    for item in checks:
+        mark = "[OK]" if item["status"] == "OK" else "[!!]" if item["status"] == "WARN" else "[X]"
+        lines.append(f"{mark} {item['name']:<{width}} {item.get('detail', '')}")
+    lines.append("=" * 60)
+    lines.append("结果: " + ("有失败项，暂不建议交付。" if any(i["status"] == "FAIL" for i in checks) else "可进入打包/交付流程；WARN 项按环境确认。"))
     return "\n".join(lines)
 
 def ensure_license_interactive():
@@ -90440,6 +90543,7 @@ def suggest_verify_commands(root, markers=None, languages=None):
     if "xjlagent.py" in markers:
         commands.append("python xjlagent.py --self-check")
         commands.append("python xjlagent.py --permission-check")
+        commands.append("python xjlagent.py --exe-check")
         commands.append("python xjlagent.py --release-check")
         if os.path.exists(os.path.join(root, "tests", "offline_smoke.py")):
             commands.append("python tests/offline_smoke.py")
@@ -90707,6 +90811,192 @@ def format_verification_results(data):
             elif item.get("stdout"):
                 lines.append("  stdout: " + item.get("stdout", "").strip().splitlines()[-1][:240])
     lines.append("结果: " + ("通过" if data.get("ok") else "有失败/阻塞项"))
+    return "\n".join(lines)
+
+def _reports_dir():
+    path = os.path.join(PERSONAL_DATA_DIR, "reports")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+def collect_task_report(path="."):
+    root = _resolve_project_root(path)
+    plan = _load_engineering_plan()
+    worktree = collect_worktree_summary(root).get("git", {})
+    recent_audit = []
+    try:
+        recent_audit = load_recent_audit(limit=12)
+    except Exception:
+        recent_audit = []
+    verification_events = [e for e in recent_audit if e.get("name") == "run_verification"][:3]
+    return {
+        "generated_at": datetime.datetime.now().isoformat(timespec="seconds"),
+        "root": root,
+        "plan": plan,
+        "worktree": worktree,
+        "verification_events": verification_events,
+    }
+
+def format_task_report(data):
+    plan = data.get("plan") or {}
+    items = plan.get("items") or []
+    worktree = data.get("worktree") or {}
+    lines = [
+        "# JL-Agent Task Report",
+        "",
+        f"- Generated: {data.get('generated_at')}",
+        f"- Project: `{data.get('root')}`",
+        f"- Plan: {plan.get('title') or 'No active plan'}",
+        f"- Worktree clean: {worktree.get('clean') if worktree.get('is_git') else 'not a git worktree'}",
+        "",
+        "## Plan Status",
+    ]
+    if items:
+        mark = {"pending": "[ ]", "in_progress": "[>]", "completed": "[x]"}
+        for i, item in enumerate(items, 1):
+            lines.append(f"{i}. {mark.get(item.get('status'), '[ ]')} {item.get('step', '')}")
+    else:
+        lines.append("No task plan is currently recorded. Use `/plan loop <title>` for substantial work.")
+    lines.extend(["", "## Worktree"])
+    if worktree.get("is_git"):
+        lines.append(f"- Branch: {worktree.get('branch') or '-'}")
+        lines.append(f"- Last commit: {worktree.get('last_commit') or '-'}")
+        counts = worktree.get("counts") or {}
+        count_text = ", ".join(f"{k}={v}" for k, v in counts.items() if v) or "none"
+        lines.append(f"- Changed files: {count_text}")
+        for item in (worktree.get("files") or [])[:20]:
+            lines.append(f"  - `{item.get('code')} {item.get('path')}`")
+    else:
+        lines.append(f"- Git: {worktree.get('detail', 'not available')}")
+    lines.extend(["", "## Verification"])
+    events = data.get("verification_events") or []
+    if not events:
+        lines.append("No recent `run_verification` audit event found. Run `python xjlagent.py --run-verify` before final handoff when possible.")
+    else:
+        for event in events:
+            lines.append(f"- {event.get('ts', '-')}: {event.get('status', '-')}")
+            result = event.get("result") or {}
+            for item in (result.get("results") or [])[:6]:
+                command = item.get("command", "")
+                exit_code = item.get("exit_code", "")
+                if item.get("skipped"):
+                    lines.append(f"  - SKIP `{command}`: {item.get('reason', '')}")
+                elif item.get("blocked"):
+                    lines.append(f"  - BLOCK `{command}`: {item.get('reason', '')}")
+                else:
+                    lines.append(f"  - exit={exit_code} `{command}`")
+    lines.extend([
+        "",
+        "## Residual Risk",
+        "- Confirm any WARN items from self-check before handing the build to coworkers.",
+        "- If the worktree is not clean, review changed files before release.",
+        "- This report is local and may include project paths; do not publish it with private company details.",
+    ])
+    return "\n".join(lines) + "\n"
+
+def write_task_report(path=".", output_path=""):
+    data = collect_task_report(path)
+    text = format_task_report(data)
+    if not output_path:
+        stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = os.path.join(_reports_dir(), f"task_report_{stamp}.md")
+    output_path = os.path.abspath(os.path.expanduser(output_path))
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(text)
+    return {"path": output_path, "text": text}
+
+RESEARCH_WORKFLOW_TEMPLATES = {
+    "stock": {
+        "title": "Stock / A-share research",
+        "subject_hint": "ticker, company name, or industry theme",
+        "questions": [
+            "Fundamentals, business quality, and recent operating trend",
+            "News, event catalysts, and policy/regulatory context",
+            "Valuation, peer comparison, and market expectations",
+            "Balance sheet, cash flow, liquidity, and accounting quality",
+            "Key uncertainties and what must be verified before any decision",
+        ],
+        "risk_rules": [
+            "重大财务造假、审计疑点、持续经营风险或现金流断裂迹象",
+            "高杠杆、短债压力、债务违约或再融资困难",
+            "重大监管、诉讼、合规、制裁、退市或牌照风险",
+            "关键数据缺失、来源不可靠，导致结论不可核验",
+            "市场情绪拥挤、极端波动、流动性不足或明显交易结构风险",
+        ],
+        "disclaimer": "Research support only. Not investment advice, not trading instruction.",
+    },
+    "company_due_diligence": {
+        "title": "Company due diligence",
+        "subject_hint": "company, vendor, client, or project counterparty",
+        "questions": [
+            "Business model, revenue drivers, and operating dependencies",
+            "Financial strength, cash flow, debt, and accounting quality",
+            "Legal, regulatory, sanctions, and reputation risks",
+            "Customer/supplier concentration and operational continuity",
+            "Missing documents, unresolved questions, and verification checklist",
+        ],
+        "risk_rules": [
+            "Unverified ownership, license, or authorization status",
+            "Material litigation, sanctions, fraud, or compliance red flags",
+            "Debt, cash flow, or going-concern risk",
+            "High dependence on one customer, supplier, platform, or key person",
+            "Important data is missing or only available from weak sources",
+        ],
+        "disclaimer": "Due diligence support only. Human/legal/compliance review remains required.",
+    },
+    "internal_project": {
+        "title": "Internal project risk review",
+        "subject_hint": "internal tool, workflow, Access/Excel system, or automation project",
+        "questions": [
+            "Purpose, users, inputs, outputs, and current workflow",
+            "Data quality, ownership, permission, and audit concerns",
+            "Operational failure modes and manual fallback plan",
+            "Deployment constraints, dependencies, and maintenance owner",
+            "Acceptance criteria, verification steps, and handover checklist",
+        ],
+        "risk_rules": [
+            "No clear owner or maintenance process",
+            "Uncontrolled write access to shared or production data",
+            "No audit trail for high-impact actions",
+            "No rollback, backup, or manual fallback",
+            "Acceptance criteria or verification steps are missing",
+        ],
+        "disclaimer": "Internal operations support only. Confirm with process owners before rollout.",
+    },
+}
+
+def research_template_names():
+    return sorted(RESEARCH_WORKFLOW_TEMPLATES)
+
+def get_research_template(name="stock"):
+    key = str(name or "stock").strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {"a_share": "stock", "stock_research": "stock", "company": "company_due_diligence", "project": "internal_project"}
+    key = aliases.get(key, key)
+    return key, RESEARCH_WORKFLOW_TEMPLATES.get(key)
+
+def format_research_templates(name=""):
+    if name:
+        key, template = get_research_template(name)
+        if not template:
+            return "未知研究模板。可用模板: " + ", ".join(research_template_names())
+        lines = [
+            f"# {template['title']}",
+            "",
+            f"Template key: `{key}`",
+            f"Subject: {template.get('subject_hint', '')}",
+            "",
+            "## Questions",
+        ]
+        lines.extend(f"- {q}" for q in template.get("questions", []))
+        lines.extend(["", "## Risk Rules"])
+        lines.extend(f"- {r}" for r in template.get("risk_rules", []))
+        lines.extend(["", "## Boundary", template.get("disclaimer", "")])
+        return "\n".join(lines)
+    lines = ["Research templates:"]
+    for key in research_template_names():
+        lines.append(f"- {key}: {RESEARCH_WORKFLOW_TEMPLATES[key]['title']}")
+    lines.append("")
+    lines.append("Use `python xjlagent.py --research-template stock` or call `risk_veto_research` with the listed questions/risk_rules.")
     return "\n".join(lines)
 
 # ====== 工具定义 ======
@@ -92504,6 +92794,22 @@ class Agent:
             if cmd in ("/permissioncheck", "/permission-check", "/permissions"):
                 checks, _code = collect_permission_check()
                 return True, format_permission_check(checks)
+            if cmd in ("/onboarding", "/first-run", "/welcome"):
+                return True, format_onboarding_status(collect_onboarding_status())
+            if cmd in ("/execheck", "/exe-check"):
+                checks, _code = collect_exe_readiness()
+                return True, format_exe_readiness(checks)
+            if cmd.startswith("/taskreport") or cmd.startswith("/task-report"):
+                if not is_admin():
+                    return True, "只有管理员才能生成任务交付报告。"
+                parts = cmd.split(maxsplit=1)
+                path = parts[1] if len(parts) > 1 else "."
+                result = write_task_report(path)
+                return True, result["text"] + f"\n报告已保存: {result['path']}"
+            if cmd.startswith("/researchtemplates") or cmd.startswith("/research-template"):
+                parts = cmd.split(maxsplit=1)
+                name_arg = parts[1] if len(parts) > 1 else ""
+                return True, format_research_templates(name_arg)
             if cmd.startswith("/project"):
                 if not is_admin():
                     return True, "  只有管理员才能使用工程项目扫描"
@@ -92784,6 +93090,10 @@ class Agent:
                     "  /selfcheck  运行环境自检",
                     "  /releasecheck  运行GitHub发布自检",
                     "  /permissioncheck  检查权限矩阵",
+                    "  /onboarding 查看首次启动/交付状态",
+                    "  /execheck   检查EXE交付准备",
+                    "  /taskreport [path]  生成任务交付报告（仅管理员）",
+                    "  /researchtemplates [name]  查看研究模板",
                     "  /project [path]  扫描工程项目",
                     "  /changes [path]  查看工作树变更",
                     "  /verify [path]   给出验证命令建议",
@@ -98194,6 +98504,10 @@ def _handle_dashboard_cmd(messages, user_id=""):
                 "/selfcheck  运行环境自检\n"
                 "/releasecheck  运行GitHub发布自检\n"
                 "/permissioncheck  检查权限矩阵\n"
+                "/onboarding 查看首次启动/交付状态\n"
+                "/execheck   检查EXE交付准备\n"
+                "/taskreport [path]  生成任务交付报告（仅管理员）\n"
+                "/researchtemplates [name]  查看研究模板\n"
                 "/project [path]  扫描工程项目\n"
                 "/changes [path]  查看工作树变更\n"
                 "/verify [path]   给出验证命令建议\n"
@@ -98283,6 +98597,36 @@ def _handle_dashboard_cmd(messages, user_id=""):
             return format_permission_check(checks)
         except Exception as e:
             return f"权限矩阵检查失败: {e}"
+
+    if name in ("/onboarding", "/first-run", "/welcome"):
+        try:
+            return format_onboarding_status(collect_onboarding_status())
+        except Exception as e:
+            return f"首次启动状态检查失败: {e}"
+
+    if name in ("/execheck", "/exe-check"):
+        try:
+            checks, _code = collect_exe_readiness()
+            return format_exe_readiness(checks)
+        except Exception as e:
+            return f"EXE交付检查失败: {e}"
+
+    if name in ("/taskreport", "/task-report"):
+        if not is_admin():
+            return "只有管理员才能生成任务交付报告。"
+        try:
+            path = text.split(maxsplit=1)[1] if len(text.split(maxsplit=1)) > 1 else "."
+            result = write_task_report(path)
+            return result["text"] + f"\n报告已保存: {result['path']}"
+        except Exception as e:
+            return f"任务交付报告生成失败: {e}"
+
+    if name in ("/researchtemplates", "/research-template"):
+        try:
+            template_name = text.split(maxsplit=1)[1] if len(text.split(maxsplit=1)) > 1 else ""
+            return format_research_templates(template_name)
+        except Exception as e:
+            return f"研究模板读取失败: {e}"
 
     if name == "/project":
         if not is_admin():
@@ -99123,6 +99467,29 @@ if __name__ == "__main__":
         checks, code = collect_permission_check()
         print(format_permission_check(checks))
         sys.exit(code)
+    elif '--onboarding' in sys.argv or '--first-run' in sys.argv:
+        print(format_onboarding_status(collect_onboarding_status()))
+        sys.exit(0)
+    elif '--exe-check' in sys.argv or '--execheck' in sys.argv:
+        checks, code = collect_exe_readiness()
+        print(format_exe_readiness(checks))
+        sys.exit(code)
+    elif '--research-templates' in sys.argv:
+        print(format_research_templates(""))
+        sys.exit(0)
+    elif '--research-template' in sys.argv:
+        idx = sys.argv.index('--research-template')
+        name = sys.argv[idx + 1] if idx + 1 < len(sys.argv) and not sys.argv[idx + 1].startswith("--") else "stock"
+        text = format_research_templates(name)
+        print(text)
+        sys.exit(1 if text.startswith("未知研究模板") else 0)
+    elif '--task-report' in sys.argv:
+        idx = sys.argv.index('--task-report')
+        path = sys.argv[idx + 1] if idx + 1 < len(sys.argv) and not sys.argv[idx + 1].startswith("--") else "."
+        result = write_task_report(path)
+        print(result["text"])
+        print(f"Report saved: {result['path']}")
+        sys.exit(0)
     elif '--activate' in sys.argv:
         print("免费开源版无需激活，直接运行即可。")
         sys.exit(0)

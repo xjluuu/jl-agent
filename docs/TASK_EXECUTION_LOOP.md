@@ -38,7 +38,23 @@ Run the smallest useful verification. Examples:
 - `python xjlagent.py --run-verify`
 - project-specific build or test commands suggested by `verify_suggestions`
 
-5. Risk summary
+5. Handoff report
+
+For substantial tasks, admins can write a local markdown report:
+
+```bash
+python xjlagent.py --task-report .
+```
+
+Interactive mode:
+
+```text
+/taskreport .
+```
+
+The report records project status, verification suggestions, visible risks, and the current runtime context. It is a handoff aid, not a substitute for human review.
+
+6. Risk summary
 
 Final output should include:
 
@@ -54,4 +70,3 @@ Viewer and Maintainer users cannot use engineering tools. For those roles, JL-Ag
 ## Why this matters
 
 This loop is the difference between a chat toy and a local work agent. It makes work inspectable, repeatable, and safer in restricted company environments.
-

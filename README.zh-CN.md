@@ -16,6 +16,9 @@ JL-Agent 不是单纯的聊天壳，而是一个面向企业内实际工作的�
 - **A 股投研日报桥接**：`stock_market_report` 可以读取本地 `stock_research` 每日多 Agent 投研日报；管理员可以用 `stock_market_run_daily` 手动运行，或用 `stock_market_install_cron` 恢复定时任务。
 - **金融/股市研究场景**：可以整理股票研究笔记、公司公告、新闻、风险因素、表格数据和内部研究资料，辅助形成结构化分析。
 - **企业部署友好**：一个 Python 文件即可运行，也可以打包成 Windows EXE；API 配置、模型名、个人目录、共享目录都可以外部配置。
+- **首次启动和交付检查**：`--onboarding` 和 `--exe-check` 会把配置路径、权限、自检、EXE 交付状态直接打印出来，方便交给非技术同事。
+- **任务交付报告**：管理员完成工程、资料整理或部署任务后，可以用 `--task-report` 或 `/taskreport` 生成本地交付报告。
+- **研究模板**：`--research-templates` 内置股票、尽调、内部项目三类研究框架，并带风险规则。
 - **可审计**：工具调用写入审计日志，常见密钥会脱敏，文件写入返回 diff，危险命令会被拦截。
 - **本地资料理解**：`analyze_folder` 和 `study_files` 可以梳理 PDF、Office 文档、表格、日志、代码和笔记，不需要把整批原文直接塞进上下文。
 
@@ -76,6 +79,10 @@ python xjlagent.py --print-config
 python xjlagent.py --project-scan
 python xjlagent.py --worktree-status
 python xjlagent.py --permission-check
+python xjlagent.py --onboarding
+python xjlagent.py --exe-check
+python xjlagent.py --research-templates
+python xjlagent.py --task-report .
 python xjlagent.py --run-verify
 python xjlagent.py --dashboard
 ```
@@ -86,7 +93,7 @@ python xjlagent.py --dashboard
 python tests/offline_smoke.py
 ```
 
-这个 smoke test 不调用模型 API，用于检查免费开源状态、角色权限、自检、发布检查和本地验证建议。
+这个 smoke test 不调用模型 API，用于检查免费开源状态、角色权限、首次启动输出、任务报告、研究模板、自检、发布检查和本地验证建议。
 
 ## 路径配置
 
@@ -138,6 +145,9 @@ export JL_AGENT_HOME="$HOME/.local/share/jl-agent"
 python -m pip install -r requirements-build.txt
 build_xjlagent_exe.bat --no-pause
 dist\xjlagent.exe --self-check
+dist\xjlagent.exe --permission-check
+dist\xjlagent.exe --exe-check
+dist\xjlagent.exe --onboarding
 ```
 
 离线环境可以先在有网络的机器上准备依赖：
@@ -167,8 +177,10 @@ JL-Agent 会继续按“受限企业环境里的本地工作 Agent”发展，�
 相关文档：
 
 - [Agent Maturity Plan](docs/AGENT_MATURITY_PLAN.md)
+- [Onboarding And Handoff](docs/ONBOARDING_AND_HANDOFF.md)
 - [Permission Matrix](docs/PERMISSION_MATRIX.md)
 - [Task Execution Loop](docs/TASK_EXECUTION_LOOP.md)
+- [Research Workflows](docs/RESEARCH_WORKFLOWS.md)
 - [Safety Model](docs/SAFETY_MODEL.md)
 
 ## 安全说明

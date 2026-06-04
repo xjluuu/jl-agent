@@ -42,11 +42,13 @@ export JL_AGENT_HOME="$HOME/.local/share/jl-agent"
 2. Configure model gateway settings in environment variables or the generated JSON config.
 3. Run `python xjlagent.py --self-check` or `dist\xjlagent.exe --self-check`.
 4. Run `python xjlagent.py --permission-check` to confirm role boundaries.
-5. In Python mode, run `python tests/offline_smoke.py` before packaging or rollout.
-6. Review [PERMISSION_MATRIX.md](PERMISSION_MATRIX.md) and decide who should be Admin, Maintainer, and Viewer.
-7. Test internal model gateway connectivity.
-8. For Windows end users without Python, build and distribute the EXE.
-9. Review `tool_audit.jsonl` during pilot use.
+5. Run `python xjlagent.py --onboarding` or `dist\xjlagent.exe --onboarding` and save the output for pilot support.
+6. In Python mode, run `python tests/offline_smoke.py` before packaging or rollout.
+7. For Windows EXE rollout, run `dist\xjlagent.exe --exe-check` after packaging.
+8. Review [PERMISSION_MATRIX.md](PERMISSION_MATRIX.md) and decide who should be Admin, Maintainer, and Viewer.
+9. Test internal model gateway connectivity.
+10. For Windows end users without Python, build and distribute the EXE.
+11. Review `tool_audit.jsonl` during pilot use.
 
 ## Environment variables
 
@@ -59,3 +61,15 @@ set JL_AGENT_API_KEY=
 ```
 
 Use environment variables for scripted deployment, or edit the JSON config file for manual deployment.
+
+## Handoff checklist
+
+Before giving JL-Agent to a normal coworker:
+
+- confirm the user has the intended role
+- run `--onboarding` on the target machine
+- confirm the API endpoint and model name are correct
+- confirm shared storage is reachable, if your deployment uses it
+- keep Admin-only tools limited to trusted operators
+
+See [ONBOARDING_AND_HANDOFF.md](ONBOARDING_AND_HANDOFF.md).

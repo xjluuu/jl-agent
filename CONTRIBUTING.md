@@ -17,6 +17,8 @@ Thanks for considering a contribution to JL-Agent.
 python -m pip install -r requirements.txt
 python xjlagent.py --self-check
 python xjlagent.py --permission-check
+python xjlagent.py --onboarding
+python xjlagent.py --exe-check
 python xjlagent.py --release-check
 python tests/offline_smoke.py
 ```
@@ -41,6 +43,8 @@ Run:
 python -m py_compile xjlagent.py
 python xjlagent.py --self-check
 python xjlagent.py --permission-check
+python xjlagent.py --onboarding
+python xjlagent.py --exe-check
 python xjlagent.py --release-check
 python tests/offline_smoke.py
 ```
@@ -50,6 +54,9 @@ If your change touches packaging, also test on Windows:
 ```bat
 build_xjlagent_exe.bat --no-pause
 dist\xjlagent.exe --self-check
+dist\xjlagent.exe --permission-check
+dist\xjlagent.exe --exe-check
+dist\xjlagent.exe --onboarding
 ```
 
 ## Pull Request Guidelines

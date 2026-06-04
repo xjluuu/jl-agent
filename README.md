@@ -18,6 +18,9 @@ JL-Agent is not just a chat wrapper. It is a local work agent for teams that nee
 - **Optional A-share daily research bridge**: `stock_market_report` reads a local `stock_research` daily report; admins can run or install the daily cron with `stock_market_run_daily` and `stock_market_install_cron`.
 - **Financial and market research workflows**: useful for organizing stock-market notes, company filings, news, risk factors, spreadsheets, and internal research material.
 - **Enterprise-friendly deployment**: one Python file, optional Windows EXE, external config, offline wheel workflow, configurable personal/shared storage.
+- **First-run handoff checks**: `--onboarding` and `--exe-check` make startup, config, permissions, and packaging readiness visible for non-developer users.
+- **Task delivery reports**: admins can generate a local task report with `--task-report` or `/taskreport` after engineering, data, or deployment work.
+- **Reusable research templates**: `--research-templates` includes stock, due-diligence, and internal-project workflows with explicit risk rules.
 - **Auditable tool use**: tool calls are logged, common secrets are redacted, file writes produce diffs, and dangerous commands are blocked.
 - **Local document intelligence**: `analyze_folder` and `study_files` summarize folders of PDFs, Office files, spreadsheets, logs, code, and notes without dumping everything into context.
 
@@ -86,6 +89,10 @@ python xjlagent.py --project-scan
 python xjlagent.py --worktree-status
 python xjlagent.py --verify-suggestions
 python xjlagent.py --permission-check
+python xjlagent.py --onboarding
+python xjlagent.py --exe-check
+python xjlagent.py --research-templates
+python xjlagent.py --task-report .
 python xjlagent.py --run-verify
 python xjlagent.py --audit-log
 python xjlagent.py --dashboard
@@ -97,7 +104,7 @@ Offline maturity check:
 python tests/offline_smoke.py
 ```
 
-This smoke test does not call a model API. It checks the free/open-source state, role permissions, self-check, release-check, and local verification suggestions.
+This smoke test does not call a model API. It checks the free/open-source state, role permissions, first-run handoff output, task reporting, research templates, self-check, release-check, and local verification suggestions.
 
 ## Platform Support
 
@@ -117,6 +124,9 @@ On a Windows machine with Python:
 python -m pip install -r requirements-build.txt
 build_xjlagent_exe.bat --no-pause
 dist\xjlagent.exe --self-check
+dist\xjlagent.exe --permission-check
+dist\xjlagent.exe --exe-check
+dist\xjlagent.exe --onboarding
 ```
 
 For offline company machines, prepare wheels on a networked machine:
@@ -211,8 +221,10 @@ JL-Agent is being developed as a local-first work agent for restricted enterpris
 See:
 
 - [Agent Maturity Plan](docs/AGENT_MATURITY_PLAN.md)
+- [Onboarding And Handoff](docs/ONBOARDING_AND_HANDOFF.md)
 - [Permission Matrix](docs/PERMISSION_MATRIX.md)
 - [Task Execution Loop](docs/TASK_EXECUTION_LOOP.md)
+- [Research Workflows](docs/RESEARCH_WORKFLOWS.md)
 - [Safety Model](docs/SAFETY_MODEL.md)
 
 ## Engineering Workflow
@@ -224,6 +236,7 @@ python xjlagent.py --project-scan
 python xjlagent.py --worktree-status
 python xjlagent.py --verify-suggestions
 python xjlagent.py --run-verify
+python xjlagent.py --task-report .
 python xjlagent.py --git-diff
 python xjlagent.py --audit-log
 ```
@@ -236,6 +249,7 @@ Interactive commands:
 /verify
 /plan
 /runverify
+/taskreport
 /gitdiff
 /audit
 ```

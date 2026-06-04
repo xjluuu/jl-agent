@@ -23,7 +23,7 @@ JL-Agent should only claim maturity when the following are true:
 - File writes, command execution, cron, process control, and development tools stay behind Admin-only gates.
 - Multi-step work follows a visible loop: plan, execute, verify, summarize residual risk.
 - Parallel research and Risk Agent veto workflows stay model-only and do not execute local commands.
-- Windows EXE users can run self-check and understand missing config without reading source code.
+- Windows EXE users can run self-check, onboarding, and EXE readiness checks without reading source code.
 - Public docs do not assume a fixed drive letter, private company path, payment flow, or personal environment.
 
 ## Development priorities
@@ -46,7 +46,7 @@ Make multi-agent research, Risk Agent veto, and local stock research report read
 
 5. Packaging and handover
 
-Improve Windows EXE docs, offline wheel workflows, config examples, and first-run diagnostics for coworkers without Python.
+Improve Windows EXE docs, offline wheel workflows, config examples, first-run diagnostics, and handoff checks for coworkers without Python.
 
 6. Gradual modularization
 

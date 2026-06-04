@@ -80,6 +80,12 @@ def main() -> int:
         permission_checks, permission_code = agent.collect_permission_check()
         check("permission matrix check passes", permission_code == 0, str(permission_checks))
 
+        onboarding = agent.format_onboarding_status(agent.collect_onboarding_status())
+        check("onboarding status is available", "JL-Agent" in onboarding and "当前角色" in onboarding, onboarding)
+
+        exe_checks, exe_code = agent.collect_exe_readiness()
+        check("exe readiness has no failures", exe_code == 0, str(exe_checks))
+
         agent.save_users(users)
         memory = agent.Memory()
         try:
@@ -105,6 +111,14 @@ def main() -> int:
         statuses = [item.get("status") for item in saved_loop.get("items", [])]
         check("task_plan loop starts first step", statuses[:1] == ["in_progress"], str(statuses))
 
+        task_report = agent.write_task_report(str(repo_root))
+        check("task report is persisted", Path(task_report.get("path", "")).exists() and "JL-Agent Task Report" in task_report.get("text", ""), str(task_report))
+
+        template_names = agent.research_template_names()
+        check("research templates are available", {"stock", "company_due_diligence", "internal_project"}.issubset(set(template_names)), str(template_names))
+        stock_template = agent.format_research_templates("stock")
+        check("stock research template includes risk rules", "Risk Rules" in stock_template and "investment advice" in stock_template, stock_template)
+
         release_checks, release_code = agent.collect_release_check()
         check("release check has no failures", release_code == 0, str(release_checks))
 
@@ -115,6 +129,7 @@ def main() -> int:
         verify_commands = scan.get("verify_commands") or []
         check("offline smoke appears in verify suggestions", any("tests/offline_smoke.py" in c for c in verify_commands), str(verify_commands))
         check("permission check appears in verify suggestions", any("--permission-check" in c for c in verify_commands), str(verify_commands))
+        check("exe check appears in verify suggestions", any("--exe-check" in c for c in verify_commands), str(verify_commands))
     finally:
         temp_root.cleanup()
 

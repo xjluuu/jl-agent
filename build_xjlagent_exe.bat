@@ -13,7 +13,7 @@ echo.
 python --version >nul 2>&1
 if errorlevel 1 goto no_python
 
-echo [1/5] Checking core build dependencies...
+echo [1/7] Checking core build dependencies...
 python -c "import PyInstaller, requests, rich, prompt_toolkit, openpyxl" >nul 2>&1
 if errorlevel 1 (
     if exist wheels (
@@ -42,21 +42,40 @@ if errorlevel 1 (
     )
 )
 
-echo [2/5] Running source self-check...
+echo [2/7] Running source self-check...
 python xjlagent.py --self-check
 if errorlevel 1 (
     echo [ERROR] Source self-check failed.
     goto fail
 )
 
-echo [3/5] Building EXE. This may take several minutes...
+echo [3/7] Running permission and handoff checks...
+python xjlagent.py --permission-check
+if errorlevel 1 (
+    echo [ERROR] Permission matrix check failed.
+    goto fail
+)
+python xjlagent.py --exe-check
+if errorlevel 1 (
+    echo [ERROR] EXE readiness check failed.
+    goto fail
+)
+if exist tests\offline_smoke.py (
+    python tests\offline_smoke.py
+    if errorlevel 1 (
+        echo [ERROR] Offline smoke test failed.
+        goto fail
+    )
+)
+
+echo [4/7] Building EXE. This may take several minutes...
 python -m PyInstaller --clean --noconfirm xjlagent.spec
 if errorlevel 1 (
     echo [ERROR] PyInstaller build failed.
     goto fail
 )
 
-echo [4/5] Running EXE self-check...
+echo [5/7] Running EXE self-check...
 if not exist dist\xjlagent.exe (
     echo [ERROR] dist\xjlagent.exe was not created.
     goto fail
@@ -67,16 +86,28 @@ if errorlevel 1 (
     goto fail
 )
 
-echo [5/5] Done.
+echo [6/7] Running EXE permission and handoff checks...
+dist\xjlagent.exe --permission-check
+if errorlevel 1 (
+    echo [ERROR] EXE permission check failed.
+    goto fail
+)
+dist\xjlagent.exe --exe-check
+if errorlevel 1 (
+    echo [ERROR] EXE readiness check failed.
+    goto fail
+)
+dist\xjlagent.exe --onboarding
+
+echo [7/7] Done.
 echo.
 echo ============================================
 echo   EXE:
 echo   %cd%\dist\xjlagent.exe
 echo.
-echo   Default company config:
-echo   D:\jlagent\myagent_config.json
+echo   Runtime config path:
+dist\xjlagent.exe --config-path
 echo.
-echo   If D: is unavailable, self-check shows the fallback config path.
 echo   API URL, model, and key can be changed in JSON without rebuilding.
 echo ============================================
 goto ok

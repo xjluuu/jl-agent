@@ -28,11 +28,13 @@ If your internal model gateway does not require authentication, `api.key` can st
 ```bash
 python xjlagent.py --self-check
 python xjlagent.py --permission-check
+python xjlagent.py --onboarding
 ```
 
 Warnings are acceptable when they describe optional capabilities, such as missing PDF support.
 
 The self-check output shows the actual runtime config and data paths for the current machine.
+The onboarding output summarizes first-run readiness, current role, config status, and suggested next actions.
 
 ## 4. Run offline smoke test
 
@@ -40,7 +42,7 @@ The self-check output shows the actual runtime config and data paths for the cur
 python tests/offline_smoke.py
 ```
 
-This does not call a model API. It checks startup, free/open-source status, role permissions, release-check, and verification suggestions.
+This does not call a model API. It checks startup, free/open-source status, role permissions, first-run output, task reporting, research templates, release-check, and verification suggestions.
 
 ## 5. Start interactive mode
 
@@ -73,3 +75,20 @@ For substantial engineering, packaging, or operations tasks, initialize the stan
 ```
 
 See [TASK_EXECUTION_LOOP.md](TASK_EXECUTION_LOOP.md).
+
+After a substantial task, admins can generate a local handoff report:
+
+```bash
+python xjlagent.py --task-report .
+```
+
+## Research templates
+
+List built-in templates:
+
+```bash
+python xjlagent.py --research-templates
+python xjlagent.py --research-template stock
+```
+
+See [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md).

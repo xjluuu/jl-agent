@@ -6,6 +6,9 @@
 python -m pip install -r requirements-build.txt
 build_xjlagent_exe.bat --no-pause
 dist\xjlagent.exe --self-check
+dist\xjlagent.exe --permission-check
+dist\xjlagent.exe --exe-check
+dist\xjlagent.exe --onboarding
 ```
 
 ## Offline company machine
@@ -31,6 +34,8 @@ build_xjlagent_exe.bat
 - `PyMuPDF` is optional. Without it, PDF parsing will show a warning but the agent can still run.
 - The generated EXE reads config from the runtime config path; API settings can be changed without rebuilding.
 - No trial, payment, or activation code is required. The EXE enters the normal UI directly.
+- `--onboarding` is the recommended first support command for non-developer users.
+- `--exe-check` should pass before distributing a packaged build. Warnings for optional capabilities can be reviewed case by case.
 
 ## Useful checks
 
@@ -38,6 +43,11 @@ Run these after packaging:
 
 ```bat
 dist\xjlagent.exe --self-check
+dist\xjlagent.exe --permission-check
+dist\xjlagent.exe --exe-check
+dist\xjlagent.exe --onboarding
 dist\xjlagent.exe --config-path
 dist\xjlagent.exe --print-config
 ```
+
+For the full handoff flow, see [ONBOARDING_AND_HANDOFF.md](ONBOARDING_AND_HANDOFF.md).
