@@ -89285,13 +89285,18 @@ def _default_runtime_config():
             "python": os.environ.get("JL_AGENT_STOCK_RESEARCH_PYTHON", ""),
             "cron": os.environ.get("JL_AGENT_STOCK_RESEARCH_CRON", "30 15 * * 1-5"),
             "job_name": os.environ.get("JL_AGENT_STOCK_RESEARCH_JOB", "A股投研日报")
+        },
+        "payment": {
+            "wechat_qr": os.environ.get("JL_AGENT_WECHAT_QR", "payment/wechat_qr.png"),
+            "wechat_name": os.environ.get("JL_AGENT_WECHAT_NAME", "WeChat Pay"),
+            "note": os.environ.get("JL_AGENT_PAYMENT_NOTE", "Confirm the plan, then scan with WeChat Pay.")
         }
     }
 
 def _merge_runtime_config(raw):
     cfg = _default_runtime_config()
     if isinstance(raw, dict):
-        for section in ("api", "agent", "memory", "stock_research"):
+        for section in ("api", "agent", "memory", "stock_research", "payment"):
             if isinstance(raw.get(section), dict):
                 cfg[section].update(raw.get(section) or {})
     # 环境变量优先，方便公司内网批量部署时用启动脚本覆盖。
@@ -89309,6 +89314,12 @@ def _merge_runtime_config(raw):
         cfg.setdefault("stock_research", {})["cron"] = os.environ["JL_AGENT_STOCK_RESEARCH_CRON"]
     if os.environ.get("JL_AGENT_STOCK_RESEARCH_JOB"):
         cfg.setdefault("stock_research", {})["job_name"] = os.environ["JL_AGENT_STOCK_RESEARCH_JOB"]
+    if os.environ.get("JL_AGENT_WECHAT_QR"):
+        cfg.setdefault("payment", {})["wechat_qr"] = os.environ["JL_AGENT_WECHAT_QR"]
+    if os.environ.get("JL_AGENT_WECHAT_NAME"):
+        cfg.setdefault("payment", {})["wechat_name"] = os.environ["JL_AGENT_WECHAT_NAME"]
+    if os.environ.get("JL_AGENT_PAYMENT_NOTE"):
+        cfg.setdefault("payment", {})["note"] = os.environ["JL_AGENT_PAYMENT_NOTE"]
     return cfg
 
 def _write_runtime_config(cfg):
@@ -89415,6 +89426,74 @@ def stock_research_settings():
         "python": str(raw.get("python", "") or "").strip(),
         "cron": str(raw.get("cron", "30 15 * * 1-5") or "30 15 * * 1-5").strip(),
         "job_name": str(raw.get("job_name", "A股投研日报") or "A股投研日报").strip()
+    }
+
+PAYMENT_PLANS = [
+    {
+        "id": "trial",
+        "name": "7-Day Trial",
+        "price": "$0",
+        "label": "evaluation",
+        "description": "Self-service evaluation for checking local fit before paying.",
+    },
+    {
+        "id": "express",
+        "name": "30-Day Express",
+        "price": "$3.90",
+        "label": "30 days",
+        "description": "Fast setup help, config guidance, and a 30-day deployment Q&A window.",
+    },
+    {
+        "id": "lifetime",
+        "name": "Lifetime",
+        "price": "$9.90",
+        "label": "one-time",
+        "description": "Lifetime access to the paid deployment pack and stated support scope.",
+    },
+    {
+        "id": "custom",
+        "name": "Custom Enterprise",
+        "price": "Quote",
+        "label": "by scope",
+        "description": "Private workflow automation, enterprise rollout, and custom integrations.",
+    },
+]
+
+def payment_settings():
+    cfg = load_runtime_config(quiet=True)
+    raw = cfg.get("payment", {}) or {}
+    qr = str(raw.get("wechat_qr", "") or "").strip()
+    def resolve_qr_path(path):
+        if not path:
+            return ""
+        expanded = os.path.expandvars(os.path.expanduser(path))
+        if os.path.isabs(expanded):
+            return os.path.abspath(expanded)
+        base = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
+        candidates = [
+            os.path.abspath(os.path.join(base, expanded)),
+            os.path.abspath(os.path.join(os.getcwd(), expanded)),
+        ]
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                return candidate
+        return candidates[0]
+    return {
+        "wechat_qr": resolve_qr_path(qr),
+        "wechat_name": str(raw.get("wechat_name", "WeChat Pay") or "WeChat Pay").strip(),
+        "note": str(raw.get("note", "Confirm the plan, then scan with WeChat Pay.") or "").strip(),
+    }
+
+def payment_public_info():
+    settings = payment_settings()
+    qr_path = settings.get("wechat_qr", "")
+    qr_available = bool(qr_path and os.path.exists(qr_path) and os.path.isfile(qr_path))
+    return {
+        "plans": PAYMENT_PLANS,
+        "wechat_name": settings.get("wechat_name", "WeChat Pay"),
+        "note": settings.get("note", ""),
+        "qr_available": qr_available,
+        "qr_path": qr_path if qr_available else qr_path,
     }
 
 def stock_research_dirs_from_cron_jobs():
@@ -89827,6 +89906,14 @@ def collect_self_check(check_api=False):
 
     add("Dashboard端口", "OK" if _port_available("127.0.0.1", PORT if 'PORT' in globals() else 18888) else "WARN",
         f"127.0.0.1:{PORT if 'PORT' in globals() else 18888} " + ("可用" if _port_available("127.0.0.1", PORT if 'PORT' in globals() else 18888) else "可能已被占用"))
+
+    try:
+        pay = payment_settings()
+        qr_path = pay.get("wechat_qr", "")
+        qr_ok = bool(qr_path and os.path.exists(qr_path) and os.path.isfile(qr_path))
+        add("微信收款码", "OK" if qr_ok else "WARN", qr_path if qr_path else "未配置；可设置 payment/wechat_qr.png 或 JL_AGENT_WECHAT_QR")
+    except Exception as e:
+        add("微信收款码", "WARN", e)
 
     if shutil.which("curl"):
         add("curl", "OK", shutil.which("curl"))
@@ -95992,6 +96079,150 @@ body[data-theme="dark"] {
   color: #dff4ee;
   cursor: pointer;
 }
+.lab-plan-btn:hover {
+  border-color: rgba(178, 242, 221, .34);
+  background: rgba(178, 242, 221, .10);
+}
+.payment-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(2, 8, 13, .68);
+  backdrop-filter: blur(16px);
+}
+.payment-modal.open {
+  display: flex;
+}
+.payment-dialog {
+  width: min(980px, 94vw);
+  max-height: min(760px, 92vh);
+  overflow: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(202, 239, 231, .12);
+  background: linear-gradient(180deg, rgba(11, 27, 34, .98), rgba(7, 17, 24, .98));
+  box-shadow: 0 28px 90px rgba(0,0,0,.42);
+  padding: 22px;
+  color: #edf7f4;
+}
+.payment-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+.payment-kicker {
+  color: #8fb4ae;
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.payment-head h2 {
+  margin: 6px 0 0;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+.payment-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(202, 239, 231, .14);
+  background: rgba(255,255,255,.04);
+  color: #edf7f4;
+  cursor: pointer;
+}
+.payment-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) 320px;
+  gap: 16px;
+}
+.payment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.payment-plan {
+  border: 1px solid rgba(202, 239, 231, .10);
+  background: rgba(255,255,255,.035);
+  border-radius: 16px;
+  padding: 16px;
+  color: #edf7f4;
+  text-align: left;
+  cursor: pointer;
+}
+.payment-plan.active {
+  border-color: rgba(160, 245, 206, .52);
+  background: linear-gradient(180deg, rgba(109, 229, 181, .16), rgba(255,255,255,.04));
+}
+.payment-plan h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.payment-price {
+  margin-top: 10px;
+  font-size: 30px;
+  font-weight: 780;
+  letter-spacing: 0;
+}
+.payment-price span {
+  color: #8fb4ae;
+  font-size: 12px;
+  font-weight: 520;
+}
+.payment-plan p {
+  margin: 10px 0 0;
+  color: #b8d6d0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.payment-qr-panel {
+  border: 1px solid rgba(202, 239, 231, .10);
+  background: rgba(255,255,255,.035);
+  border-radius: 18px;
+  padding: 16px;
+}
+.payment-selected {
+  font-size: 13px;
+  color: #b8d6d0;
+  line-height: 1.5;
+  min-height: 42px;
+}
+.payment-qr-frame {
+  margin-top: 14px;
+  min-height: 250px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 1px dashed rgba(202, 239, 231, .18);
+  background: rgba(255,255,255,.04);
+  overflow: hidden;
+}
+.payment-qr-frame img {
+  width: min(240px, 100%);
+  height: auto;
+  display: none;
+  background: #fff;
+  padding: 8px;
+  border-radius: 10px;
+}
+.payment-missing {
+  padding: 18px;
+  color: #a9c7c1;
+  font-size: 12px;
+  line-height: 1.65;
+  text-align: center;
+}
+.payment-note {
+  margin-top: 12px;
+  color: #8fb4ae;
+  font-size: 11px;
+  line-height: 1.6;
+}
 .lab-meter {
   margin-top: 14px;
 }
@@ -96548,6 +96779,12 @@ body[data-theme="dark"] {
   .lab-topbar {
     display: none;
   }
+  .payment-body {
+    grid-template-columns: 1fr;
+  }
+  .payment-grid {
+    grid-template-columns: 1fr;
+  }
   .lab-hero-banner {
     min-height: 34px;
     padding: 6px 8px;
@@ -96750,10 +96987,10 @@ body[data-theme="dark"] {
     <div class="lab-plan-card">
       <div class="lab-plan-top">
         <div>
-          <div class="lab-plan-name">Pro Plan</div>
-          <div class="lab-plan-sub">本地工作台 / 知识库 / 多工具 Agent</div>
+          <div class="lab-plan-name">Plans</div>
+          <div class="lab-plan-sub">30-Day $3.90 / Lifetime $9.90</div>
         </div>
-        <button class="lab-plan-btn" type="button">Upgrade</button>
+        <button class="lab-plan-btn" type="button" onclick="openPaymentModal('express')">Plans</button>
       </div>
       <div class="lab-meter">
         <div class="lab-meter-label"><span>在线用户</span><strong id="online-count">0</strong></div>
@@ -96791,7 +97028,7 @@ body[data-theme="dark"] {
       </div>
       <div class="lab-top-actions">
         <div id="model-brief">加载模型中...</div>
-        <button class="lab-icon-btn" type="button">◌</button>
+        <button class="lab-icon-btn" type="button" onclick="openPaymentModal('express')" title="Plans">$</button>
         <button class="lab-icon-btn" type="button">☼</button>
       </div>
     </header>
@@ -96809,6 +97046,7 @@ body[data-theme="dark"] {
         <div class="lab-hero-actions">
           <button class="hero-pill primary" type="button" onclick="focusComposer()">Create New Agent +</button>
           <button class="hero-pill" type="button" onclick="setPanel('skills')">Explore Templates</button>
+          <button class="hero-pill" type="button" onclick="openPaymentModal('express')">View Plans</button>
         </div>
       </div>
       <div class="lab-system-card">
@@ -96998,6 +97236,28 @@ body[data-theme="dark"] {
         <div class="empty">选择一个用户后，这里会显示今天的对话。</div>
       </div>
     </aside>
+    <div class="payment-modal" id="payment-modal" aria-hidden="true">
+      <div class="payment-dialog" role="dialog" aria-modal="true" aria-labelledby="payment-title">
+        <div class="payment-head">
+          <div>
+            <div class="payment-kicker">JL-Agent Plans</div>
+            <h2 id="payment-title">Choose a plan</h2>
+          </div>
+          <button class="payment-close" type="button" onclick="closePaymentModal()">x</button>
+        </div>
+        <div class="payment-body">
+          <div class="payment-grid" id="payment-plan-list"></div>
+          <aside class="payment-qr-panel">
+            <div class="payment-selected" id="payment-selected">Select a paid plan to show the WeChat Pay QR code.</div>
+            <div class="payment-qr-frame">
+              <img id="payment-qr-img" alt="WeChat Pay QR code">
+              <div class="payment-missing" id="payment-qr-missing">Put your WeChat payment QR image at payment/wechat_qr.png, then restart or refresh this dashboard.</div>
+            </div>
+            <div class="payment-note" id="payment-note">Do not upload payment QR codes or private account details to public GitHub issues.</div>
+          </aside>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -97013,16 +97273,124 @@ const state = {
   currentUser: '',
   isAdmin: false,
   selectedUser: null,
-  sessionId: null
+  sessionId: null,
+  payment: null,
+  paymentPlan: 'express'
 };
 
 const themes = ['system', 'light', 'dark'];
 const colorPool = ['#b56a34', '#417a82', '#96643a', '#6d7f3a', '#8d5d92', '#3b78aa', '#aa5c5c'];
+const fallbackPlans = [
+  { id: 'trial', name: '7-Day Trial', price: '$0', label: 'evaluation', description: 'Self-service evaluation for checking local fit before paying.' },
+  { id: 'express', name: '30-Day Express', price: '$3.90', label: '30 days', description: 'Fast setup help, config guidance, and a 30-day deployment Q&A window.' },
+  { id: 'lifetime', name: 'Lifetime', price: '$9.90', label: 'one-time', description: 'Lifetime access to the paid deployment pack and stated support scope.' },
+  { id: 'custom', name: 'Custom Enterprise', price: 'Quote', label: 'by scope', description: 'Private workflow automation, enterprise rollout, and custom integrations.' }
+];
 
 function esc(text) {
   const div = document.createElement('div');
   div.textContent = text || '';
   return div.innerHTML;
+}
+
+async function loadPayment() {
+  if (state.payment) return state.payment;
+  try {
+    const res = await fetch('/api/payment');
+    state.payment = await res.json();
+  } catch (err) {
+    state.payment = { plans: fallbackPlans, qr_available: false, note: 'Payment settings are not loaded.' };
+  }
+  if (!state.payment.plans || !state.payment.plans.length) {
+    state.payment.plans = fallbackPlans;
+  }
+  return state.payment;
+}
+
+function selectedPaymentPlan() {
+  const payment = state.payment || { plans: fallbackPlans };
+  return (payment.plans || fallbackPlans).find(plan => plan.id === state.paymentPlan) || fallbackPlans[1];
+}
+
+function renderPaymentPlans() {
+  const wrap = document.getElementById('payment-plan-list');
+  if (!wrap) return;
+  const payment = state.payment || { plans: fallbackPlans };
+  wrap.innerHTML = (payment.plans || fallbackPlans).map(plan => (
+    '<button type="button" class="payment-plan' + (plan.id === state.paymentPlan ? ' active' : '') + '" onclick="selectPaymentPlan(' + JSON.stringify(plan.id) + ')">' +
+      '<h3>' + esc(plan.name) + '</h3>' +
+      '<div class="payment-price">' + esc(plan.price) + ' <span>' + esc(plan.label || '') + '</span></div>' +
+      '<p>' + esc(plan.description || '') + '</p>' +
+    '</button>'
+  )).join('');
+}
+
+function updatePaymentQr() {
+  const plan = selectedPaymentPlan();
+  const payment = state.payment || {};
+  const selected = document.getElementById('payment-selected');
+  const img = document.getElementById('payment-qr-img');
+  const missing = document.getElementById('payment-qr-missing');
+  const note = document.getElementById('payment-note');
+  const paidPlan = plan.id === 'express' || plan.id === 'lifetime';
+  if (selected) selected.textContent = plan.name + ' - ' + plan.price + ' ' + (plan.label || '');
+  if (note) note.textContent = payment.note || 'Confirm the plan, then scan with WeChat Pay.';
+  if (!paidPlan) {
+    if (img) img.style.display = 'none';
+    if (missing) {
+      missing.style.display = 'block';
+      missing.textContent = plan.id === 'trial'
+        ? '7-Day Trial is free. No payment QR code is required.'
+        : 'Custom Enterprise is quoted separately. Confirm scope before payment.';
+    }
+    return;
+  }
+  if (payment.qr_available) {
+    if (missing) missing.style.display = 'none';
+    if (img) {
+      img.style.display = 'block';
+      img.src = '/api/payment_qr?plan=' + encodeURIComponent(plan.id) + '&v=' + Date.now();
+      img.onerror = () => {
+        img.style.display = 'none';
+        if (missing) {
+          missing.style.display = 'block';
+          missing.textContent = 'Payment QR failed to load. Check payment/wechat_qr.png or JL_AGENT_WECHAT_QR.';
+        }
+      };
+    }
+  } else {
+    if (img) img.style.display = 'none';
+    if (missing) {
+      missing.style.display = 'block';
+      missing.textContent = 'Put your WeChat payment QR image at payment/wechat_qr.png, or set JL_AGENT_WECHAT_QR to an image path, then refresh.';
+    }
+  }
+}
+
+function selectPaymentPlan(planId) {
+  state.paymentPlan = planId || 'express';
+  renderPaymentPlans();
+  updatePaymentQr();
+}
+
+async function openPaymentModal(planId) {
+  state.paymentPlan = planId || state.paymentPlan || 'express';
+  const modal = document.getElementById('payment-modal');
+  if (modal) {
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  await loadPayment();
+  renderPaymentPlans();
+  updatePaymentQr();
+}
+
+function closePaymentModal() {
+  const modal = document.getElementById('payment-modal');
+  if (modal) {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
 }
 
 function formatText(text) {
@@ -97809,6 +98177,16 @@ function bindEvents() {
     }
   });
 
+  const paymentModal = document.getElementById('payment-modal');
+  if (paymentModal) {
+    paymentModal.addEventListener('click', event => {
+      if (event.target === paymentModal) closePaymentModal();
+    });
+  }
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closePaymentModal();
+  });
+
   document.getElementById('search-input').addEventListener('input', event => {
     renderSearchResults(event.target.value);
   });
@@ -98405,6 +98783,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if p == "/api/users": self._json(get_users_data())
         elif p == "/api/skills": self._json({"skills": list_loaded_skills()})
         elif p == "/api/scheduled": self._json({"tasks": list_personal_scheduled()})
+        elif p == "/api/payment": self._json(payment_public_info())
+        elif p == "/api/payment_qr": self._payment_qr()
         elif p == "/api/config": self._json({"model": MODEL})
         else: self._html(HTML)
     def do_POST(self):
@@ -98500,6 +98880,43 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def _html(self, h, c=200):
         self.send_response(c); self.send_header("Content-Type","text/html; charset=utf-8"); self.end_headers()
         self.wfile.write(h.encode("utf-8"))
+    def _payment_qr(self):
+        info = payment_public_info()
+        path = info.get("qr_path", "")
+        if not info.get("qr_available") or not path:
+            self.send_response(404)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(b"payment qr not configured")
+            return
+        ext = os.path.splitext(path)[1].lower()
+        content_types = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".gif": "image/gif",
+            ".webp": "image/webp",
+        }
+        if ext not in content_types:
+            self.send_response(415)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(b"unsupported payment qr image type")
+            return
+        try:
+            with open(path, "rb") as f:
+                data = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", content_types[ext])
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+        except Exception:
+            self.send_response(404)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(b"payment qr not readable")
 
 def get_users_data():
     update_heartbeat()
@@ -98631,6 +99048,7 @@ def _run_embedded_dashboard():
         'format_verification_results': format_verification_results,
         'load_recent_audit': load_recent_audit,
         'format_audit_log': format_audit_log,
+        'payment_public_info': payment_public_info,
     }
     exec(EMBEDDED_DASHBOARD_SOURCE, ns, ns)
     start = ns.get('start_server')

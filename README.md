@@ -149,6 +149,9 @@ JL_AGENT_STOCK_RESEARCH_DIR
 JL_AGENT_STOCK_RESEARCH_PYTHON
 JL_AGENT_STOCK_RESEARCH_CRON
 JL_AGENT_STOCK_RESEARCH_JOB
+JL_AGENT_WECHAT_QR
+JL_AGENT_WECHAT_NAME
+JL_AGENT_PAYMENT_NOTE
 ```
 
 Optional stock research bridge:
@@ -181,6 +184,8 @@ export JL_AGENT_HOME="$HOME/.local/share/jl-agent"
 
 See [config.example.json](config.example.json).
 
+For the optional local dashboard payment modal, put your WeChat payment QR image at `payment/wechat_qr.png`, or set `JL_AGENT_WECHAT_QR` to a local image path. The `payment/` folder is ignored by Git and should not be committed.
+
 ## Website
 
 The project landing page lives in [site/](site/). The included GitHub Pages workflow publishes that folder when changes are pushed to `main`.
@@ -190,8 +195,8 @@ The project landing page lives in [site/](site/). The included GitHub Pages work
 JL-Agent is open source and free to use. Paid plans are available for teams that want faster setup, packaged deployment assets, configuration handover, and support:
 
 - **7-Day Trial - USD 0**: self-service evaluation checklist, config path guidance, and basic self-check flow.
-- **30-Day Express - USD 99**: Python or Windows EXE startup support, API/storage/permission setup, and a 30-day deployment Q&A window.
-- **Lifetime - USD 499**: one-time onboarding, setup review, lifetime access to paid deployment notes, and future public update guidance. Custom workflow work is quoted separately.
+- **30-Day Express - USD 3.90**: Python or Windows EXE startup support, API/storage/permission setup, and a 30-day deployment Q&A window.
+- **Lifetime - USD 9.90**: one-time onboarding, setup review, lifetime access to paid deployment notes, and future public update guidance. Custom workflow work is quoted separately.
 
 Open a [paid setup request](https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml) or visit the [services section](https://xjluuu.github.io/jl-agent/#services).
 

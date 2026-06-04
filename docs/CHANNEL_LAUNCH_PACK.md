@@ -159,7 +159,7 @@ Delivery: immediate / best-effort guidance
 Package 2:
 
 ```text
-30-Day Express - $99
+30-Day Express - $3.90
 - Python or Windows EXE startup support
 - API URL, model, key, personal path, and shared path setup guidance
 - Admin / Maintainer / Viewer permission map
@@ -172,7 +172,7 @@ Delivery: 2-5 days for initial setup, then 30-day Q&A window
 Package 3:
 
 ```text
-Lifetime - $499
+Lifetime - $9.90
 - One-time onboarding and setup review
 - Lifetime access to paid deployment notes and packaged templates
 - Future public update guidance

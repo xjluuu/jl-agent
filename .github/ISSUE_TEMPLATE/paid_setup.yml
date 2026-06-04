@@ -15,8 +15,8 @@ body:
       label: Plan
       options:
         - 7-Day Trial - USD 0 evaluation
-        - 30-Day Express - USD 99
-        - Lifetime - USD 499 one-time
+        - 30-Day Express - USD 3.90
+        - Lifetime - USD 9.90 one-time
         - Custom Enterprise - quote by scope
         - Not sure yet
     validations:

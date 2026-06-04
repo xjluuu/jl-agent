@@ -28,7 +28,7 @@ Price: USD 0
 
 ## 30-Day Express
 
-Price: USD 99
+Price: USD 3.90
 
 - Python or Windows EXE startup support
 - API endpoint, model, key, personal path, and shared path setup guidance
@@ -39,7 +39,7 @@ Price: USD 99
 
 ## Lifetime
 
-Price: USD 499 one-time
+Price: USD 9.90 one-time
 
 - One-time onboarding and setup review
 - Lifetime access to paid deployment notes and packaged templates

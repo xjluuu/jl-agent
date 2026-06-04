@@ -15,6 +15,7 @@ myagent_config*.json
 *.pem
 *.p12
 *.pfx
+payment/
 
 # JL-Agent runtime data
 .myagent/

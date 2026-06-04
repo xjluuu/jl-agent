@@ -50,3 +50,20 @@ Open:
 ```text
 http://127.0.0.1:18888
 ```
+
+## Optional payment QR
+
+If you distribute a paid deployment build, save your WeChat payment QR image as:
+
+```text
+payment/wechat_qr.png
+```
+
+Then start the dashboard and click `Plans`. The modal shows:
+
+- 7-Day Trial: free
+- 30-Day Express: USD 3.90
+- Lifetime: USD 9.90
+- Custom Enterprise: quote by scope
+
+Do not commit the `payment/` folder to a public repository.

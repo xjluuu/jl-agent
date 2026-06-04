@@ -5,8 +5,8 @@ JL-Agent is open source and free to use. Paid setup is a manual service workflow
 Paid plan examples:
 
 - 7-Day Trial: USD 0
-- 30-Day Express: USD 99
-- Lifetime: USD 499 one-time
+- 30-Day Express: USD 3.90
+- Lifetime: USD 9.90 one-time
 
 Lifetime means the paid deployment pack and stated support scope, not unlimited custom development.
 
@@ -33,6 +33,29 @@ For non-China clients, use a separate method such as PayPal, Wise, Stripe, Paddl
 Do not commit personal payment QR codes, merchant private keys, API credentials, phone numbers, ID documents, bank details, or invoices with private information to this public repository.
 
 If a public payment page is needed later, use a merchant payment link or a dedicated landing page instead of committing raw personal QR codes into the repository.
+
+## Dashboard QR Code
+
+To show a WeChat payment QR code inside the local dashboard:
+
+1. Create a local folder named `payment` next to `xjlagent.py`.
+2. Save your WeChat payment QR image as `payment/wechat_qr.png`.
+3. Start the dashboard with `python xjlagent.py --dashboard`.
+4. Click `Plans`, then choose `30-Day Express` or `Lifetime`.
+
+You can also point to another local image path:
+
+```bash
+export JL_AGENT_WECHAT_QR="/path/to/wechat_qr.png"
+python xjlagent.py --dashboard
+```
+
+On Windows:
+
+```bat
+set JL_AGENT_WECHAT_QR=C:\path\to\wechat_qr.png
+python xjlagent.py --dashboard
+```
 
 ## Notes
 
