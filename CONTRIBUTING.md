@@ -9,6 +9,7 @@ Thanks for considering a contribution to JL-Agent.
 - Do not add mandatory cloud services.
 - Do not commit API keys, business files, runtime databases, logs, or packaged build output.
 - Preserve Windows enterprise deployment support.
+- Preserve the task execution loop: context, plan, execute, verify, risk summary.
 
 ## Local Setup
 

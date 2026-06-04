@@ -167,6 +167,7 @@ JL-Agent 会继续按“受限企业环境里的本地工作 Agent”发展，�
 
 - [Agent Maturity Plan](docs/AGENT_MATURITY_PLAN.md)
 - [Permission Matrix](docs/PERMISSION_MATRIX.md)
+- [Task Execution Loop](docs/TASK_EXECUTION_LOOP.md)
 - [Safety Model](docs/SAFETY_MODEL.md)
 
 ## 安全说明

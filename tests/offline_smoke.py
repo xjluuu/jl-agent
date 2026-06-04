@@ -69,6 +69,15 @@ def main() -> int:
         check("development classifier catches code work", agent.looks_like_development_request("帮我写一个 Python 脚本修 bug"), "")
         check("development classifier allows research", not agent.looks_like_development_request("总结这些会议纪要里的风险"), "")
 
+        loop_policy = agent.task_execution_loop_policy()
+        for phrase in ("Context", "Plan", "Execute", "Verify", "Risk summary"):
+            check(f"task loop policy includes {phrase}", phrase in loop_policy, loop_policy)
+        loop_plan = agent.default_task_loop_plan("Smoke task loop")
+        check("task loop has five standard steps", len(loop_plan.get("items", [])) == 5, str(loop_plan))
+        saved_loop = agent.update_engineering_plan("loop", "Smoke task loop")
+        statuses = [item.get("status") for item in saved_loop.get("items", [])]
+        check("task_plan loop starts first step", statuses[:1] == ["in_progress"], str(statuses))
+
         release_checks, release_code = agent.collect_release_check()
         check("release check has no failures", release_code == 0, str(release_checks))
 
@@ -84,7 +93,7 @@ def main() -> int:
     failed = [(name, detail) for name, ok, detail in checks if not ok]
     for name, ok, detail in checks:
         mark = "[OK]" if ok else "[X]"
-        suffix = f" - {detail}" if detail else ""
+        suffix = f" - {detail}" if detail and not ok else ""
         print(f"{mark} {name}{suffix}")
 
     if failed:
@@ -96,4 +105,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

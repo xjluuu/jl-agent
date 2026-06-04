@@ -62,3 +62,13 @@ http://127.0.0.1:18888
 ## Free use
 
 JL-Agent is free and open source under the MIT license. No trial, payment, or activation code is required.
+
+## Task loop
+
+For substantial engineering, packaging, or operations tasks, initialize the standard loop:
+
+```text
+/plan loop <title>
+```
+
+See [TASK_EXECUTION_LOOP.md](TASK_EXECUTION_LOOP.md).

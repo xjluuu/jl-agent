@@ -211,6 +211,7 @@ See:
 
 - [Agent Maturity Plan](docs/AGENT_MATURITY_PLAN.md)
 - [Permission Matrix](docs/PERMISSION_MATRIX.md)
+- [Task Execution Loop](docs/TASK_EXECUTION_LOOP.md)
 - [Safety Model](docs/SAFETY_MODEL.md)
 
 ## Engineering Workflow
@@ -240,11 +241,11 @@ Interactive commands:
 
 Recommended code-work flow:
 
-1. Scan the project.
-2. Inspect the worktree before editing.
-3. Preview or apply a narrow patch.
+1. Build context with project scan and worktree status.
+2. Create a visible plan with `/plan loop <title>` or `task_plan(action="loop")`.
+3. Execute the smallest scoped step.
 4. Run the minimum verification pipeline.
-5. Summarize changed files and residual risk.
+5. Summarize changed files, verification results, and residual risk.
 
 ## Safety Layer
 

@@ -38,7 +38,7 @@ Keep all high-impact local actions Admin-only. Document the tool groups, test th
 
 3. Task execution loop
 
-For engineering and operations tasks, guide the agent to maintain a task plan, execute bounded steps, run verification when available, and report what was verified.
+For engineering and operations tasks, guide the agent to maintain a task plan, execute bounded steps, run verification when available, and report what was verified. See [TASK_EXECUTION_LOOP.md](TASK_EXECUTION_LOOP.md).
 
 4. Research differentiation
 
@@ -55,4 +55,3 @@ Keep the one-file runtime as the distribution format, but move tests, docs, and 
 ## Current stage
 
 JL-Agent is an early productized local agent, not a mature platform. It already has real utility in restricted local environments, but it should be judged by reliability, permission safety, and packaging clarity before feature count.
-

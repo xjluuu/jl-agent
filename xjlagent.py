@@ -90066,6 +90066,35 @@ def run_release_check():
 def _engineering_plan_file():
     return os.path.join(PERSONAL_DATA_DIR, "engineering_plan.json")
 
+TASK_EXECUTION_LOOP_STEPS = [
+    "Context: scan the project or input materials, then inspect existing state before changing anything.",
+    "Plan: create or update task_plan with small, ordered steps and mark exactly one step in_progress.",
+    "Execute: make the smallest scoped change for the current step without touching unrelated files.",
+    "Verify: run verify_suggestions, run_verification, self-check, or the smallest relevant manual check.",
+    "Risk summary: report what changed, what was verified, and any remaining risk or unverified assumptions.",
+]
+
+def task_execution_loop_policy():
+    return textwrap.dedent("""\
+        ## Task Execution Loop
+        For engineering, packaging, data-cleanup, document-processing, and operations tasks, use this loop:
+
+        1. Context: scan the project or input materials, then inspect existing state before changing anything.
+        2. Plan: create or update task_plan with small, ordered steps and mark exactly one step in_progress.
+        3. Execute: make the smallest scoped change for the current step without touching unrelated files.
+        4. Verify: run verify_suggestions, run_verification, self-check, or the smallest relevant manual check.
+        5. Risk summary: report what changed, what was verified, and any remaining risk or unverified assumptions.
+
+        If verification cannot run, say exactly what environment or dependency is missing. Do not claim success without either a verification result or a clear limitation.
+    """).strip()
+
+def default_task_loop_plan(title="任务闭环"):
+    return {
+        "title": str(title or "任务闭环").strip(),
+        "items": [{"step": step, "status": "pending"} for step in TASK_EXECUTION_LOOP_STEPS],
+        "updated_at": "",
+    }
+
 def _load_engineering_plan():
     fp = _engineering_plan_file()
     if not os.path.exists(fp):
@@ -90098,6 +90127,11 @@ def update_engineering_plan(action="show", text="", index=None):
     data = _load_engineering_plan()
     if action in ("new", "reset"):
         data = {"title": str(text or "未命名任务").strip(), "items": [], "updated_at": ""}
+        _save_engineering_plan(data)
+    elif action in ("loop", "workflow", "standard"):
+        data = default_task_loop_plan(text or "任务闭环")
+        if data["items"]:
+            data["items"][0]["status"] = "in_progress"
         _save_engineering_plan(data)
     elif action == "add":
         item_text = str(text or "").strip()
@@ -90133,7 +90167,7 @@ def format_engineering_plan(data):
         lines.append(f"更新时间: {data.get('updated_at')}")
     if not items:
         lines.append("暂无步骤。")
-        lines.append("用法: /plan new <标题> | /plan add <步骤> | /plan start 1 | /plan done 1 | /plan clear")
+        lines.append("用法: /plan loop <标题> | /plan new <标题> | /plan add <步骤> | /plan start 1 | /plan done 1 | /plan clear")
         return "\n".join(lines)
     mark = {"pending": "[ ]", "in_progress": "[>]", "completed": "[x]"}
     for i, item in enumerate(items, 1):
@@ -90621,7 +90655,7 @@ TOOLS = [
         "parameters": {"type": "object", "properties": {"path": {"type": "string"}}, "required": []}}},
     {"type": "function", "function": {"name": "verify_suggestions", "description": "根据项目类型给出最小验证命令建议",
         "parameters": {"type": "object", "properties": {"path": {"type": "string"}}, "required": []}}},
-    {"type": "function", "function": {"name": "task_plan", "description": "维护一个本地任务计划板，支持 show/new/add/start/done/todo/clear",
+    {"type": "function", "function": {"name": "task_plan", "description": "维护一个本地任务计划板，支持 show/new/add/start/done/todo/clear/loop；loop 会生成标准任务闭环",
         "parameters": {"type": "object", "properties": {"action": {"type": "string"}, "text": {"type": "string"}, "index": {"type": "integer"}}, "required": []}}},
     {"type": "function", "function": {"name": "preview_patch", "description": "预览文本替换补丁，只返回diff，不写入文件",
         "parameters": {"type": "object", "properties": {"path": {"type": "string"}, "old_text": {"type": "string"}, "new_text": {"type": "string"}, "replace_all": {"type": "boolean"}}, "required": ["path", "old_text", "new_text"]}}},
@@ -92033,6 +92067,7 @@ class Agent:
             - 修改后尽量自动验证：Python 用 py_compile，脚本/服务用最小可运行测试，Dashboard 用本地接口检查。
             - 处理工程项目时，先调用 project_scan 建立项目上下文；涉及改代码前先调用 worktree_status 查看是否有用户已有改动；改完后调用 verify_suggestions 或按项目类型运行最小验证。
             - 多步骤工程任务要维护 task_plan：开始时列步骤，推进时更新状态，最终说明哪些步骤完成、哪些还有风险。
+            - 工程/打包/资料整理/运营类任务必须执行 Task Execution Loop；可以用 task_plan action=loop 初始化标准闭环步骤。
             - 不要覆盖用户未要求修改的文件；发现工作树已有无关改动时，只说明并避开。
             - 对代码修改，优先 preview_patch 看 diff，再用 patch_file/exact_patch 写入；写入结果里的 diff 要用于最终摘要。
             - execute_command 有安全拦截。遇到危险命令被拦截时，不要绕过；说明风险，除非管理员明确要求并确认。
@@ -92083,6 +92118,7 @@ class Agent:
             - 当 analyze_folder 返回 knowledge_base_candidates 时，要主动告诉用户哪些文件适合沉淀进共享知识库。
             工具使用原则：能直接回答的问题不要调工具（名字、时间、记忆等），但涉及文件读写、代码执行、网页搜索等操作必须调工具，不要自己编内容。
         """)
+        base += "\n\n" + task_execution_loop_policy()
         base += "\n\n" + build_role_policy_prompt(USER_ID, getattr(self, "_user_data", None))
         # 读取个人 soul.md（放内存/MEMORY_DB 同目录，不共享）
         _soul_path = os.path.join(os.path.dirname(MEMORY_DB), "soul.md")
@@ -92655,7 +92691,7 @@ class Agent:
                     "  /project [path]  扫描工程项目",
                     "  /changes [path]  查看工作树变更",
                     "  /verify [path]   给出验证命令建议",
-                    "  /plan new/add/start/done/todo/clear/show  任务计划",
+                    "  /plan loop/new/add/start/done/todo/clear/show  任务计划",
                     "  /runverify [path]  运行验证流水线",
                     "  /gitdiff [path]    查看Git diff",
                     "  /audit [n]         查看工具审计日志",
@@ -98064,7 +98100,7 @@ def _handle_dashboard_cmd(messages, user_id=""):
                 "/project [path]  扫描工程项目\n"
                 "/changes [path]  查看工作树变更\n"
                 "/verify [path]   给出验证命令建议\n"
-                "/plan new/add/start/done/todo/clear/show  任务计划\n"
+                "/plan loop/new/add/start/done/todo/clear/show  任务计划\n"
                 "/runverify [path]  运行验证流水线\n"
                 "/gitdiff [path]    查看Git diff\n"
                 "/audit [n]         查看工具审计日志\n"
