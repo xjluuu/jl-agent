@@ -187,15 +187,15 @@ The project landing page lives in [site/](site/). The included GitHub Pages work
 
 ## Commercial Support
 
-JL-Agent is open source and free to use. Paid support is available for teams that want help with restricted-environment deployment:
+JL-Agent is open source and free to use. Paid plans are available for teams that want faster setup, packaged deployment assets, configuration handover, and support:
 
-- **Starter Setup - USD 99**: Python or Windows EXE startup check, external config, storage layout, and basic permission handover.
-- **Enterprise Pilot - USD 499+**: Windows EXE packaging plan, internal model gateway configuration, shared storage, role-based permissions, audit review, and optional `/stock` report bridge validation.
-- **Custom Workflow - quote by scope**: local knowledge ingestion, approval flows, research workflows, department permissions, and offline handover documentation.
+- **7-Day Trial - USD 0**: self-service evaluation checklist, config path guidance, and basic self-check flow.
+- **30-Day Express - USD 99**: Python or Windows EXE startup support, API/storage/permission setup, and a 30-day deployment Q&A window.
+- **Lifetime - USD 499**: one-time onboarding, setup review, lifetime access to paid deployment notes, and future public update guidance. Custom workflow work is quoted separately.
 
 Open a [paid setup request](https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml) or visit the [services section](https://xjluuu.github.io/jl-agent/#services).
 
-Payment is handled manually after scope confirmation. China-based clients can use Alipay or WeChat Pay; do not post payment QR codes or private account details in public issues. See [docs/PAYMENT.md](docs/PAYMENT.md).
+Payment is handled manually after scope confirmation. China-based clients can use Alipay or WeChat Pay; international payment methods can be agreed separately. Do not post payment QR codes or private account details in public issues. See [docs/PAYMENT.md](docs/PAYMENT.md).
 
 Financial workflows are research support only. JL-Agent does not provide investment advice, does not place trades, and does not replace your organization's compliance review.
 

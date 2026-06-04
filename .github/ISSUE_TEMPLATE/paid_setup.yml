@@ -12,11 +12,12 @@ body:
   - type: dropdown
     id: package
     attributes:
-      label: Setup package
+      label: Plan
       options:
-        - Starter Setup - USD 99 fixed scope
-        - Enterprise Pilot - USD 499+ deployment pilot
-        - Custom Workflow - quote by scope
+        - 7-Day Trial - USD 0 evaluation
+        - 30-Day Express - USD 99
+        - Lifetime - USD 499 one-time
+        - Custom Enterprise - quote by scope
         - Not sure yet
     validations:
       required: true

@@ -69,6 +69,9 @@ Website: https://xjluuu.github.io/jl-agent/
 
 ```text
 I also offer paid setup for teams that need help deploying JL-Agent internally:
+- 7-Day Trial: free self-service evaluation
+- 30-Day Express: $99 setup support and 30-day deployment Q&A
+- Lifetime: $499 one-time deployment pack and stated support scope
 - configure internal model gateway
 - run with Python on macOS/Windows/Linux
 - build Windows EXE
@@ -81,6 +84,7 @@ I also offer paid setup for teams that need help deploying JL-Agent internally:
 Payment:
 - China-based clients: Alipay or WeChat Pay after scope confirmation
 - International clients: agreed separately
+- Lifetime means the paid deployment pack and stated support scope, not unlimited custom development
 
 Contact: https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml
 ```

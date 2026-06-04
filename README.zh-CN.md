@@ -143,15 +143,15 @@ prepare_offline_wheels.bat
 
 ## 付费部署服务
 
-JL-Agent 是开源项目，可以免费使用。付费服务只面向希望把它真正落地到受限公司环境的团队：
+JL-Agent 是开源项目，可以免费使用。付费计划面向希望更快跑通、获得部署包、配置交接和支持的团队：
 
-- **Starter Setup - 99 美元**：Python 或 Windows EXE 启动检查、外部配置、存储路径和基础权限交接。
-- **Enterprise Pilot - 499 美元起**：Windows EXE 打包方案、内网模型网关配置、共享存储、角色权限、审计检查，以及可选 `/stock` 投研日报桥接验证。
-- **Custom Workflow - 按范围报价**：本地知识库导入、审批流程、研究工作流、部门权限、离线交接文档。
+- **7-Day Trial - 0 美元**：自助试用清单、配置路径说明和基础自检流程。
+- **30-Day Express - 99 美元**：Python 或 Windows EXE 启动支持、API/存储/权限配置，以及 30 天部署答疑窗口。
+- **Lifetime - 499 美元**：一次性 onboarding、配置复核、付费部署说明的终身访问和未来公开版本更新指引。定制工作流单独报价。
 
 可以提交 [paid setup request](https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml)，也可以查看官网的 [services section](https://xjluuu.github.io/jl-agent/#services)。
 
-付款在确认服务范围后人工处理。国内客户可使用支付宝或微信支付；不要在公开 issue 里贴收款码、私人账户信息或公司资料。见 [docs/PAYMENT.md](docs/PAYMENT.md)。
+付款在确认服务范围后人工处理。国内客户可使用支付宝或微信支付，海外支付方式单独约定；不要在公开 issue 里贴收款码、私人账户信息或公司资料。见 [docs/PAYMENT.md](docs/PAYMENT.md)。
 
 金融/股市相关能力只用于研究辅助。JL-Agent 不提供投资建议，不执行交易，也不能替代公司合规审查。
 

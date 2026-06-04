@@ -148,38 +148,37 @@ China-based clients can use Alipay or WeChat Pay after the scope is confirmed. I
 Package 1:
 
 ```text
-Starter Setup - $99
-- Review your target runtime: Python mode or Windows EXE
-- Run self-check / release-check guidance
-- Configure API URL, model, storage paths, and basic user roles
-- Provide short handover notes
-Delivery: 2-3 days
+7-Day Trial - $0
+- Self-service evaluation checklist
+- Config path and self-check guidance
+- Basic fit check for Python mode, Windows EXE needs, model gateway, and storage constraints
+- No production rollout or custom work
+Delivery: immediate / best-effort guidance
 ```
 
 Package 2:
 
 ```text
-Deployment Setup - $299
-- Everything in Starter Setup
-- Windows EXE packaging checklist
-- Internal model gateway configuration guidance
+30-Day Express - $99
+- Python or Windows EXE startup support
+- API URL, model, key, personal path, and shared path setup guidance
 - Admin / Maintainer / Viewer permission map
-- Audit log and safe command settings
-- Offline or restricted-network deployment notes
-Delivery: 4-5 days
+- Audit and safe-command setup checklist
+- Optional /stock report bridge validation
+- 30-day deployment Q&A window
+Delivery: 2-5 days for initial setup, then 30-day Q&A window
 ```
 
 Package 3:
 
 ```text
-Enterprise Pilot - $499+
-- Everything in Deployment Setup
-- Shared storage layout
-- Team handover checklist
-- Optional /stock report bridge validation
-- Parallel research or Risk Agent veto workflow configuration
-- Pilot rollout notes for a small team
-Delivery: 5-10 days depending on scope
+Lifetime - $499
+- One-time onboarding and setup review
+- Lifetime access to paid deployment notes and packaged templates
+- Future public update guidance
+- Priority review for configuration questions within the stated product scope
+- Custom workflow automation quoted separately
+Delivery: 5-10 days for onboarding, lifetime access to stated materials
 ```
 
 Buyer requirements:

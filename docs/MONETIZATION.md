@@ -15,41 +15,48 @@ Payment methods:
 
 Do not publish personal payment QR codes in the public repository. Send payment details privately after confirming scope and price.
 
-Example service packages:
+Public plans:
 
-## Starter Setup
+## 7-Day Trial
 
-Price idea: USD 99
+Price: USD 0
 
-- Run self-check
-- Configure API endpoint/model
-- Build Windows EXE
-- Configure basic role permissions
-- Add Risk Agent veto rules for research workflows
-- Provide short deployment notes
+- Self-service evaluation checklist
+- Config path and self-check guidance
+- Basic fit check for Python mode, Windows EXE needs, model gateway, and storage constraints
+- No production rollout, private customization, or guaranteed response window
 
-## Enterprise Pilot
+## 30-Day Express
 
-Price idea: USD 499+
+Price: USD 99
 
-- Shared drive configuration
-- Internal model gateway setup
-- Audit log review
-- Knowledge-base import workflow
-- Finance, market, and compliance research templates
-- Risk Agent one-vote veto configuration
-- Pilot user training
+- Python or Windows EXE startup support
+- API endpoint, model, key, personal path, and shared path setup guidance
+- Basic Admin / Maintainer / Viewer permission map
+- Audit and safe-command setup checklist
+- Optional /stock report bridge validation
+- 30-day deployment Q&A window after scope confirmation
 
-## Custom Workflow Automation
+## Lifetime
 
-Price idea: custom quote
+Price: USD 499 one-time
 
-- Excel/Access/report automation
-- Internal document workflow
+- One-time onboarding and setup review
+- Lifetime access to paid deployment notes and packaged templates
+- Future public update guidance
+- Priority review for configuration questions within the stated product scope
+- Custom workflow automation, private integrations, and enterprise rollout work are quoted separately
+
+## Custom Enterprise
+
+Price: custom quote
+
+- Excel, Access, report, and internal document workflow automation
 - Local plugin development
 - Compliance-oriented deployment
 - Stock-market / industry research workflow packs
 - Custom risk-veto rule packs
+- Team pilot and handover sessions
 
 This document is intentionally generic. Adapt pricing and terms to your region, legal situation, and customer requirements.
 

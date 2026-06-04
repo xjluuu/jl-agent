@@ -2,6 +2,14 @@
 
 JL-Agent is open source and free to use. Paid setup is a manual service workflow.
 
+Paid plan examples:
+
+- 7-Day Trial: USD 0
+- 30-Day Express: USD 99
+- Lifetime: USD 499 one-time
+
+Lifetime means the paid deployment pack and stated support scope, not unlimited custom development.
+
 ## Supported Payment Methods
 
 For China-based clients:
