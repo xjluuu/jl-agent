@@ -89490,8 +89490,9 @@ def payment_public_info():
     settings = payment_settings()
     qr_path = settings.get("wechat_qr", "")
     qr_available = bool(qr_path and os.path.exists(qr_path) and os.path.isfile(qr_path))
+    paid_plans = [plan for plan in PAYMENT_PLANS if plan.get("id") in ("express", "lifetime")]
     return {
-        "plans": PAYMENT_PLANS,
+        "plans": paid_plans,
         "wechat_name": settings.get("wechat_name", "WeChat Pay"),
         "note": settings.get("note", ""),
         "qr_available": qr_available,
@@ -97567,10 +97568,8 @@ const state = {
 const themes = ['system', 'light', 'dark'];
 const colorPool = ['#b56a34', '#417a82', '#96643a', '#6d7f3a', '#8d5d92', '#3b78aa', '#aa5c5c'];
 const fallbackPlans = [
-  { id: 'trial', name: '7-Day Trial', price: '$0', label: 'evaluation', description: 'Self-service evaluation for checking local fit before paying.' },
   { id: 'express', name: '30-Day Express', price: '$3.90', label: '30 days', description: 'Fast setup help, config guidance, and a 30-day deployment Q&A window.' },
-  { id: 'lifetime', name: 'Lifetime', price: '$9.90', label: 'one-time', description: 'Lifetime access to the paid deployment pack and stated support scope.' },
-  { id: 'custom', name: 'Custom Enterprise', price: 'Quote', label: 'by scope', description: 'Private workflow automation, enterprise rollout, and custom integrations.' }
+  { id: 'lifetime', name: 'Lifetime', price: '$9.90', label: 'one-time', description: 'Lifetime access to the paid deployment pack and stated support scope.' }
 ];
 
 function esc(text) {
@@ -97595,7 +97594,7 @@ async function loadPayment() {
 
 function selectedPaymentPlan() {
   const payment = state.payment || { plans: fallbackPlans };
-  return (payment.plans || fallbackPlans).find(plan => plan.id === state.paymentPlan) || fallbackPlans[1];
+  return (payment.plans || fallbackPlans).find(plan => plan.id === state.paymentPlan) || fallbackPlans[0];
 }
 
 function renderPaymentPlans() {
@@ -97618,19 +97617,8 @@ function updatePaymentQr() {
   const img = document.getElementById('payment-qr-img');
   const missing = document.getElementById('payment-qr-missing');
   const note = document.getElementById('payment-note');
-  const paidPlan = plan.id === 'express' || plan.id === 'lifetime';
   if (selected) selected.textContent = plan.name + ' - ' + plan.price + ' ' + (plan.label || '');
   if (note) note.textContent = payment.note || 'Confirm the plan, then scan with WeChat Pay.';
-  if (!paidPlan) {
-    if (img) img.style.display = 'none';
-    if (missing) {
-      missing.style.display = 'block';
-      missing.textContent = plan.id === 'trial'
-        ? '7-Day Trial is free. No payment QR code is required.'
-        : 'Custom Enterprise is quoted separately. Confirm scope before payment.';
-    }
-    return;
-  }
   if (payment.qr_available) {
     if (missing) missing.style.display = 'none';
     if (img) {
