@@ -195,6 +195,8 @@ JL-Agent is open source and free to use. Paid support is available for teams tha
 
 Open a [paid setup request](https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml) or visit the [services section](https://xjluuu.github.io/jl-agent/#services).
 
+Payment is handled manually after scope confirmation. China-based clients can use Alipay or WeChat Pay; do not post payment QR codes or private account details in public issues. See [docs/PAYMENT.md](docs/PAYMENT.md).
+
 Financial workflows are research support only. JL-Agent does not provide investment advice, does not place trades, and does not replace your organization's compliance review.
 
 ## Engineering Workflow

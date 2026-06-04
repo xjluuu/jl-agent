@@ -6,6 +6,14 @@ Public service entry:
 
 - Website: https://xjluuu.github.io/jl-agent/#services
 - GitHub request form: https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml
+- Payment workflow: PAYMENT.md
+
+Payment methods:
+
+- China-based clients: Alipay or WeChat Pay after scope confirmation
+- Non-China clients: PayPal, Wise, Stripe, Paddle, or another agreed channel
+
+Do not publish personal payment QR codes in the public repository. Send payment details privately after confirming scope and price.
 
 Example service packages:
 

@@ -78,6 +78,10 @@ I also offer paid setup for teams that need help deploying JL-Agent internally:
 - run self-check
 - prepare deployment notes
 
+Payment:
+- China-based clients: Alipay or WeChat Pay after scope confirmation
+- International clients: agreed separately
+
 Contact: https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml
 ```
 

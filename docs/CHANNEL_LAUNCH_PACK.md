@@ -58,6 +58,8 @@ https://xjluuu.github.io/jl-agent/
 金融/股市相关功能只做研究辅助，不是投资建议，也不是自动交易系统。
 
 如果有团队想直接试部署，我也放了 paid setup request 入口，但这帖主要还是想先收集产品和工程建议。
+
+国内付费部署可以在确认范围后用支付宝或微信支付，公开 issue 里不要贴收款码、密钥或公司资料。
 ```
 
 ## OSCHINA
@@ -139,6 +141,8 @@ This service is for practical deployment work: Windows EXE packaging, external c
 JL-Agent is open source. You can use it for free. This paid service is for teams that want a working deployment plan, checked configuration, and handover notes instead of figuring everything out alone.
 
 Financial and market workflows are research support only. I do not provide investment advice and I do not build automated trading systems.
+
+China-based clients can use Alipay or WeChat Pay after the scope is confirmed. International payment methods can be agreed separately.
 ```
 
 Package 1:

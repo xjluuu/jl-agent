@@ -151,6 +151,8 @@ JL-Agent 是开源项目，可以免费使用。付费服务只面向希望把�
 
 可以提交 [paid setup request](https://github.com/xjluuu/jl-agent/issues/new?template=paid_setup.yml)，也可以查看官网的 [services section](https://xjluuu.github.io/jl-agent/#services)。
 
+付款在确认服务范围后人工处理。国内客户可使用支付宝或微信支付；不要在公开 issue 里贴收款码、私人账户信息或公司资料。见 [docs/PAYMENT.md](docs/PAYMENT.md)。
+
 金融/股市相关能力只用于研究辅助。JL-Agent 不提供投资建议，不执行交易，也不能替代公司合规审查。
 
 ## 安全说明

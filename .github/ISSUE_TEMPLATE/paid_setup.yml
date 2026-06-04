@@ -20,6 +20,18 @@ body:
         - Not sure yet
     validations:
       required: true
+  - type: dropdown
+    id: payment_method
+    attributes:
+      label: Preferred payment method
+      description: Payment is handled manually after scope confirmation. Do not paste payment QR codes or private account details in this public issue.
+      options:
+        - Alipay
+        - WeChat Pay
+        - PayPal / Wise / Stripe / other international method
+        - Not sure yet
+    validations:
+      required: true
   - type: textarea
     id: use_case
     attributes:
@@ -66,8 +78,8 @@ body:
     id: contact
     attributes:
       label: Contact preference
-      description: Share a safe contact method if you want to move the commercial discussion outside GitHub.
-      placeholder: Email, GitHub profile, or another safe contact method. Do not paste secrets.
+      description: Share a safe contact method if you want to move payment and commercial details outside GitHub.
+      placeholder: Email, GitHub profile, WeChat ID, or another safe contact method. Do not paste payment QR codes, secrets, or private company data.
   - type: textarea
     id: success
     attributes:
